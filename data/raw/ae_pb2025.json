@@ -1,0 +1,1458 @@
+[
+  {
+    "chapitre": "PRESIDENCE DE LA REPUBLIQUE",
+    "code": 168,
+    "programme": "FORMULATION ET COORDINATION DE L'ACTION PRÉSIDENTIELLE",
+    "objectifs": "Contribuer à l'atteinte des objectifs visés par le programme des grandes réalisations",
+    "ae": 23690610,
+    "cp": 23690610
+  },
+  {
+    "chapitre": "PRESIDENCE DE LA REPUBLIQUE",
+    "code": 169,
+    "programme": "PROTECTION PRÉSIDENTIELLE ET INTÉGRITÉ DU TERRITOIRE",
+    "objectifs": "Préserver l'intégrité du territoire national et la stabilité politique",
+    "ae": 8118493,
+    "cp": 8118493
+  },
+  {
+    "chapitre": "PRESIDENCE DE LA REPUBLIQUE",
+    "code": 170,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DE LA PRÉSIDENCE DE LA RÉPUBLIQUE ET SES SERVICES RATTACHÉS",
+    "objectifs": "Améliorer la coordination des services et assurer la bonne mise en œuvre des programmes",
+    "ae": 28913897,
+    "cp": 28913897
+  },
+  {
+    "chapitre": "SERVICES RATTACHES A LA PRESIDENCE",
+    "code": 171,
+    "programme": "FORMULATION ET COORDINATION DE L'ACTION PRÉSIDENTIELLE",
+    "objectifs": "Contribuer à l'atteinte des objectifs visés par le programme des grandes réalisations",
+    "ae": 1322728,
+    "cp": 1322728
+  },
+  {
+    "chapitre": "SERVICES RATTACHES A LA PRESIDENCE",
+    "code": 172,
+    "programme": "PROTECTION PRÉSIDENTIELLE ET INTÉGRITÉ DU TERRITOIRE",
+    "objectifs": "Contribuer à la préservation de l'intégrité du territoire national et la stabilité politique",
+    "ae": 10506272,
+    "cp": 10506272
+  },
+  {
+    "chapitre": "ASSEMBLEE NATIONALE",
+    "code": 174,
+    "programme": "RENFORCEMENT DU CONTRÔLE PARLEMENTAIRE DE L'ACTION GOUVERNEMENTALE",
+    "objectifs": "contribuer à l'effectivité des services Publics",
+    "ae": 6140000,
+    "cp": 6140000
+  },
+  {
+    "chapitre": "ASSEMBLEE NATIONALE",
+    "code": 175,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DES SERVICES DE L'ASSEMBLÉE NATIONALE",
+    "objectifs": "Renforcer le cadre législatif national",
+    "ae": 18482000,
+    "cp": 18482000
+  },
+  {
+    "chapitre": "SERVICES DU PREMIER MINISTRE",
+    "code": 10,
+    "programme": "DIRECTION ET COORDINATION DE L'ACTION GOUVERNEMENTALE",
+    "objectifs": "Veiller à l'amélioration de la gouvernance administrative, économique et financière des politiques publiques",
+    "ae": 5128380,
+    "cp": 5128380
+  },
+  {
+    "chapitre": "SERVICES DU PREMIER MINISTRE",
+    "code": 11,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DES SERVICES INTERNES ET RATTACHES AUX SERVICES DU PREMIER MINISTRE",
+    "objectifs": "Améliorer la coordination opérationnelle des services et assurer la bonne mise en œuvre des programmes dans les SPM",
+    "ae": 15249689,
+    "cp": 18243578
+  },
+  {
+    "chapitre": "SERVICES DU PREMIER MINISTRE",
+    "code": 204,
+    "programme": "COORDINATION STRATEGIQUE ET POLITIQUE",
+    "objectifs": "Optimiser la coordination stratégique et politique de l'action gouvernementale",
+    "ae": 4017042,
+    "cp": 4017042
+  },
+  {
+    "chapitre": "CONSEIL ECONOMIQUE ET SOCIAL",
+    "code": 95,
+    "programme": "CONSEIL DE L'EXÉCUTIF EN MATIÈRE ÉCONOMIQUE, SOCIALE, CULTURELLE ET ENVIRONNEMENTALE",
+    "objectifs": "Renforcer la participation des différentes catégories socioprofessionnelles à l'élaboration et à la mise en œuvre des politiques publiques",
+    "ae": 80000,
+    "cp": 80000
+  },
+  {
+    "chapitre": "CONSEIL ECONOMIQUE ET SOCIAL",
+    "code": 96,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DU CONSEIL ÉCONOMIQUE ET SOCIAL",
+    "objectifs": "Assurer la mise en œuvre optimale des Programmes du CES",
+    "ae": 1311000,
+    "cp": 2111000
+  },
+  {
+    "chapitre": "MINISTERE DES RELATIONS EXTERIEURES",
+    "code": 87,
+    "programme": "RENFORCEMENT DU POTENTIEL DES RELATIONS BILATÉRALES",
+    "objectifs": "capitaliser au bénéfice du Cameroun les retombées qu'offrent les relations bilatérales",
+    "ae": 23884074,
+    "cp": 23884074
+  },
+  {
+    "chapitre": "MINISTERE DES RELATIONS EXTERIEURES",
+    "code": 88,
+    "programme": "NEGOCIATION, COORDINATION ET SUIVI DE LA COOPERATION MULTILATERALE, DECENTRALISEE, NON GOUVERNENMENTALE ET DES PROGRAMMES SUBSEQUENTS",
+    "objectifs": "Diversifier et accroitre les opportunités de la coopération multilatérale, décentralisée et non gouvernementale",
+    "ae": 4470284,
+    "cp": 4470284
+  },
+  {
+    "chapitre": "MINISTERE DES RELATIONS EXTERIEURES",
+    "code": 89,
+    "programme": "GESTION DE LA DIASPORA, DES MIGRANTS ET DES CRISES NOUVELLES",
+    "objectifs": "Accroitre la participation des Camerounais à l'étranger au développement du Cameroun et contribuer à la gestion des crises nouvelles",
+    "ae": 6146882,
+    "cp": 6146882
+  },
+  {
+    "chapitre": "MINISTERE DES RELATIONS EXTERIEURES",
+    "code": 90,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DANS LE SOUS-SECTEUR DES RELATIONS EXTERIEURES",
+    "objectifs": "Améliorer la coordination des services et assurer la bonne mise en œuvre des programmes au MINREX",
+    "ae": 13637759,
+    "cp": 13637759
+  },
+  {
+    "chapitre": "MINISTERE DE L'ADMINISTRATION TERRITOIALE",
+    "code": 161,
+    "programme": "ADMINISTRATION DU TERRITOIRE",
+    "objectifs": "Accroître la représentativité de l'administration du territoire",
+    "ae": 6759436,
+    "cp": 6759436
+  },
+  {
+    "chapitre": "MINISTERE DE L'ADMINISTRATION TERRITOIALE",
+    "code": 162,
+    "programme": "CONTRIBUTION A LA PROMOTION DES LIBERTES PUBLIQUES ET SECURITE DES PERSONNES ET DES BIENS",
+    "objectifs": "Assurer le respect de la règlementation en matière des libertés individuelles et collectives",
+    "ae": 2068753,
+    "cp": 2068753
+  },
+  {
+    "chapitre": "MINISTERE DE L'ADMINISTRATION TERRITOIALE",
+    "code": 163,
+    "programme": "DEVELOPPEMENT DU DISPOSITIF NATIONAL DE PROTECTION CIVILE",
+    "objectifs": "Renforcer la résilience face aux risques, aux catastrophes et leurs effets",
+    "ae": 2385000,
+    "cp": 2385000
+  },
+  {
+    "chapitre": "MINISTERE DE L'ADMINISTRATION TERRITOIALE",
+    "code": 164,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DANS LE DOMAINE DE L'ADMINISTRATION DU TERRITOIRE",
+    "objectifs": "Assurer la mise en œuvre optimale des Programmes du Ministère",
+    "ae": 32451811,
+    "cp": 31296811
+  },
+  {
+    "chapitre": "MINISTERE DE LA JUSTICE",
+    "code": 50,
+    "programme": "AMELIORATION DE L'ACTIVITE JURIDICTIONNELLE",
+    "objectifs": "Améliorer la qualité et l'accès équitable au service public de la Justice",
+    "ae": 49602066,
+    "cp": 36032284
+  },
+  {
+    "chapitre": "MINISTERE DE LA JUSTICE",
+    "code": 51,
+    "programme": "AMELIORATION DE LA POLITIQUE PENITENTIAIRE",
+    "objectifs": "Améliorer les conditions de détention et la promotion de la réinsertion sociale des détenus",
+    "ae": 25722895,
+    "cp": 25722895
+  },
+  {
+    "chapitre": "MINISTERE DE LA JUSTICE",
+    "code": 52,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DU SOUS-SECTEUR JUSTICE",
+    "objectifs": "Assurer annuellement l'efficacité et l'efficience des services pour la mise en œuvre optimale des Programmes du Ministère de la Justice",
+    "ae": 13052821,
+    "cp": 13052821
+  },
+  {
+    "chapitre": "COUR SUPREME",
+    "code": 114,
+    "programme": "CONTROLE DE LA TRANSPARENCE FINANCIERE DE LA GESTION BUDGETAIRE ET DE LA QUALITE DES COMPTES PUBLICS",
+    "objectifs": "Renforcer le contrôle et le jugement des comptes publics",
+    "ae": 1058041,
+    "cp": 1058041
+  },
+  {
+    "chapitre": "COUR SUPREME",
+    "code": 115,
+    "programme": "GESTION DES CONTENTIEUX JUDICIAIRES ET ADMINISTRATIFS",
+    "objectifs": "Améliorer le rendement de la Cour Suprême en matière Judiciaire et Administrative",
+    "ae": 455249,
+    "cp": 455249
+  },
+  {
+    "chapitre": "COUR SUPREME",
+    "code": 188,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DE LA COUR SUPRÊME",
+    "objectifs": "Assurer la mise en œuvre optimale des Programmes de la CS",
+    "ae": 2817581,
+    "cp": 4293710
+  },
+  {
+    "chapitre": "MINISTERE DES MARCHES PUBLICS",
+    "code": 27,
+    "programme": "ADMINISTRATION DU SYSTEME DES MARCHES PUBLICS",
+    "objectifs": "Assurer le bon fonctionnement du système des marchés publics",
+    "ae": 2310100,
+    "cp": 2310100
+  },
+  {
+    "chapitre": "MINISTERE DES MARCHES PUBLICS",
+    "code": 28,
+    "programme": "PROGRAMMATION ET SUIVI DES MARCHES PUBLICS",
+    "objectifs": "Veiller à la programmation et à la bonne passation des marchés publics",
+    "ae": 2109490,
+    "cp": 2109490
+  },
+  {
+    "chapitre": "MINISTERE DES MARCHES PUBLICS",
+    "code": 29,
+    "programme": "CONTROLE EXTERNE DE L'EXECUTION DES MARCHES PUBLICS",
+    "objectifs": "Veiller à la qualité des prestations réalisées",
+    "ae": 1787976,
+    "cp": 1787976
+  },
+  {
+    "chapitre": "MINISTERE DES MARCHES PUBLICS",
+    "code": 30,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DANS LE SOUS-SECTEUR DES MARCHES PUBLICS",
+    "objectifs": "Améliorer la performance des services",
+    "ae": 10806834,
+    "cp": 10582434
+  },
+  {
+    "chapitre": "CONTROLE SUPERIEUR DE L'ETAT",
+    "code": 67,
+    "programme": "RENFORCEMENT DE LA PREVENTION DES ATTEINTES A LA FORTUNE PUBLIQUE",
+    "objectifs": "Promouvoir la culture de la bonne gouvernance dans la gestion des affaires publiques",
+    "ae": 886000,
+    "cp": 886000
+  },
+  {
+    "chapitre": "CONTROLE SUPERIEUR DE L'ETAT",
+    "code": 76,
+    "programme": "AUDITS, CONTRÔLE ET SANCTIONS",
+    "objectifs": "Sanctionner les Gestionnaires indélicats et Réparer les préjudices subis par l'Etat",
+    "ae": 2226250,
+    "cp": 2226250
+  },
+  {
+    "chapitre": "CONTROLE SUPERIEUR DE L'ETAT",
+    "code": 77,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DES SERVICES DU CONTRÔLE SUPERIEUR DE L'ETAT",
+    "objectifs": "Assurer la mise en œuvre optimale des programmes du CONSUPE",
+    "ae": 6503627,
+    "cp": 3487750
+  },
+  {
+    "chapitre": "DELEGATION GENERALE A LA SURETE NATIONALE",
+    "code": 62,
+    "programme": "CONSOLIDATION DE LA SÉCURITÉ PUBLIQUE",
+    "objectifs": "Accroître la protection des institutions, des libertés publiques, des personnes et des biens",
+    "ae": 9967287,
+    "cp": 9967287
+  },
+  {
+    "chapitre": "DELEGATION GENERALE A LA SURETE NATIONALE",
+    "code": 63,
+    "programme": "RENFORCEMENT DE LA SÉCURITÉ FRONTALIÈRE",
+    "objectifs": "Accroitre la sécurité des frontières",
+    "ae": 6488547,
+    "cp": 6488547
+  },
+  {
+    "chapitre": "DELEGATION GENERALE A LA SURETE NATIONALE",
+    "code": 64,
+    "programme": "REDYNAMISATION DU SYSTÈME DE RENSEIGNEMENT",
+    "objectifs": "Mettre à la disposition des autorités, des renseignements pour la prise de décisions",
+    "ae": 7030388,
+    "cp": 7030388
+  },
+  {
+    "chapitre": "DELEGATION GENERALE A LA SURETE NATIONALE",
+    "code": 65,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DE LA DGSN",
+    "objectifs": "Améliorer la coordination des services et assurer la bonne mise en œuvre des programmes",
+    "ae": 98609778,
+    "cp": 98609778
+  },
+  {
+    "chapitre": "MINISTERE DE LA DEFENSE",
+    "code": 1,
+    "programme": "DÉFENSE DE L'INTÉGRITÉ DU TERRITOIRE NATIONAL",
+    "objectifs": "Renforcer les mesures garantissant l'intégrité territoriale",
+    "ae": 169058969,
+    "cp": 168556443
+  },
+  {
+    "chapitre": "MINISTERE DE LA DEFENSE",
+    "code": 3,
+    "programme": "PARTICIPATION A LA SÉCURITÉ DES PERSONNES, DES BIENS ET DE L'ENVIRONNEMENT",
+    "objectifs": "Garantir les conditions de sécurité et de paix favorables au développement",
+    "ae": 88780559,
+    "cp": 88805663
+  },
+  {
+    "chapitre": "MINISTERE DE LA DEFENSE",
+    "code": 4,
+    "programme": "ASSISTANCE, RECONVERSION ET REINSERTION DES ANCIENS COMBATTANTS ET VICTIMES DE GUERRE (ACVG)",
+    "objectifs": "Améliorer le suivi, la reconversion et la réinsertion des Anciens Combattants et Victimes de guerre",
+    "ae": 41656514,
+    "cp": 41656514
+  },
+  {
+    "chapitre": "MINISTERE DE LA DEFENSE",
+    "code": 5,
+    "programme": "PARTICIPATION À L'ACTION NATIONALE DE DÉVELOPPEMENT",
+    "objectifs": "Améliorer l'appui du MINDEF dans des domaines spécifiques contribuant au développement socio-économique du Cameroun",
+    "ae": 9657441,
+    "cp": 9657441
+  },
+  {
+    "chapitre": "MINISTERE DE LA DEFENSE",
+    "code": 6,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DU SOUS-SECTEUR DÉFENSE",
+    "objectifs": "Améliorer la coordination des services et assurer la bonne mise en œuvre des programmes au Ministère de la Défense",
+    "ae": 56542898,
+    "cp": 56183939
+  },
+  {
+    "chapitre": "MINISTERE DES ARTS ET DE LA CULTURE",
+    "code": 148,
+    "programme": "CONSERVATION DE LA CULTURE ET DE L'ART CAMEROUNAIS",
+    "objectifs": "Reconstituer et sauvegarder le patrimoine culturel et artistique",
+    "ae": 1658000,
+    "cp": 1658000
+  },
+  {
+    "chapitre": "MINISTERE DES ARTS ET DE LA CULTURE",
+    "code": 149,
+    "programme": "DEVELOPPEMENT ET VALORISATION DE LA PRODUCTION DES BIENS ET SERVICES CULTURELS",
+    "objectifs": "favoriser l'émergence d'un secteur culturel marchand organisé, compétitif et créateur de revenus et d'emplois durables",
+    "ae": 5636800,
+    "cp": 4219500
+  },
+  {
+    "chapitre": "MINISTERE DES ARTS ET DE LA CULTURE",
+    "code": 182,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DU MINISTERE DES ARTS ET DE LA CULTURE",
+    "objectifs": "Assurer la mise en œuvre optimale des Programmes du Ministère",
+    "ae": 3551500,
+    "cp": 3551500
+  },
+  {
+    "chapitre": "MINISTERE DE L'EDUCATION DE BASE",
+    "code": 101,
+    "programme": "DÉVELOPPEMENT DU PRÉSCOLAIRE",
+    "objectifs": "Accroître le taux de préscolarisation sur toute l'étendue du territoire national.",
+    "ae": 30883070,
+    "cp": 30883070
+  },
+  {
+    "chapitre": "MINISTERE DE L'EDUCATION DE BASE",
+    "code": 102,
+    "programme": "UNIVERSALISATION DU CYCLE PRIMAIRE",
+    "objectifs": "Améliorer l'accès et l'achèvement de tous les enfants d'âge scolaire à un enseignement primaire de qualité et inclusif",
+    "ae": 234476493,
+    "cp": 234476493
+  },
+  {
+    "chapitre": "MINISTERE DE L'EDUCATION DE BASE",
+    "code": 103,
+    "programme": "ALPHABÉTISATION",
+    "objectifs": "Accroitre le pourcentage de la population alphabétisée",
+    "ae": 4695027,
+    "cp": 4695027
+  },
+  {
+    "chapitre": "MINISTERE DE L'EDUCATION DE BASE",
+    "code": 104,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DU SOUS-SECTEUR EDUCATION DE BASE",
+    "objectifs": "Optimiser la mise en œuvre efficace des programmes opérationnels",
+    "ae": 43559410,
+    "cp": 43559410
+  },
+  {
+    "chapitre": "MINISTERE DES SPORTS ET DE L'EDUCATION PHYSIQUE",
+    "code": 7,
+    "programme": "DEVELOPPEMENT DE L'EDUCATION PHYSIQUE",
+    "objectifs": "Accroitre la pratique saine, méthodique et encadrée des Activités Physiques et Sportives (APS)",
+    "ae": 8597500,
+    "cp": 8597500
+  },
+  {
+    "chapitre": "MINISTERE DES SPORTS ET DE L'EDUCATION PHYSIQUE",
+    "code": 8,
+    "programme": "DEVELOPPEMENT DU SPORT",
+    "objectifs": "Améliorer le rayonnement international du Cameroun par le sport et la gouvernance du mouvement sportif national",
+    "ae": 14460000,
+    "cp": 14460000
+  },
+  {
+    "chapitre": "MINISTERE DES SPORTS ET DE L'EDUCATION PHYSIQUE",
+    "code": 9,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DANS LE SOUS-SECTEUR SPORT ET EDUCATION PHYSIQUE",
+    "objectifs": "Assurer la mise en œuvre optimale des Programmes du MINSEP",
+    "ae": 8028500,
+    "cp": 8028500
+  },
+  {
+    "chapitre": "MINISTERE DE LA COMMUNICATION",
+    "code": 13,
+    "programme": "Accroissement de l'accès des populations aux contenus médiatiques",
+    "objectifs": "Accroitre qualitativement et quantitativement la couverture nationale de l'information par les médias publics et à capitaux privés",
+    "ae": 1578000,
+    "cp": 1578000
+  },
+  {
+    "chapitre": "MINISTERE DE LA COMMUNICATION",
+    "code": 97,
+    "programme": "Développement d'une communication multisectorielle axée sur la performance sociétale",
+    "objectifs": "Accroitre l'offre d'information institutionnelle pour l'accès des populations aux services sociaux de base",
+    "ae": 2369750,
+    "cp": 2369750
+  },
+  {
+    "chapitre": "MINISTERE DE LA COMMUNICATION",
+    "code": 160,
+    "programme": "Gouvernance et appui institutionnel dans le sous-secteur de la communication",
+    "objectifs": "Améliorer la coordination des services et assurer la bonne mise en œuvre des programmes au Ministère de la Communication",
+    "ae": 3336250,
+    "cp": 3336250
+  },
+  {
+    "chapitre": "MINISTERE DE L'ENSEIGNEMENT SUPERIEUR",
+    "code": 116,
+    "programme": "DEVELOPPEMENT DE LA COMPOSANTE TECHNOLOGIQUE ET PROFESSIONNELLE DE L'ENSEIGNEMENT SUPERIEUR",
+    "objectifs": "Accroitre en quantité et en qualité le nombre des étudiants formés dans les établissements technologiques et professionnels",
+    "ae": 17146380,
+    "cp": 17146380
+  },
+  {
+    "chapitre": "MINISTERE DE L'ENSEIGNEMENT SUPERIEUR",
+    "code": 117,
+    "programme": "MODERNISATION ET PROFESSIONNALISATION DES ETABLISSEMENTS FACULTAIRES CLASSIQUES",
+    "objectifs": "Donner des compétences et aptitudes professionnelles aux étudiants des établissements facultaires classiques",
+    "ae": 11025081,
+    "cp": 11025081
+  },
+  {
+    "chapitre": "MINISTERE DE L'ENSEIGNEMENT SUPERIEUR",
+    "code": 118,
+    "programme": "DEVELOPPEMENT DE LA RECHERCHE ET DE L'INNOVATION UNIVERSITAIRE",
+    "objectifs": "Permettre à la recherche universitaire d'impacter positivement le développement du pays en vue de son émergence",
+    "ae": 26569824,
+    "cp": 26569824
+  },
+  {
+    "chapitre": "MINISTERE DE L'ENSEIGNEMENT SUPERIEUR",
+    "code": 119,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DANS LE SOUS SECTEUR ENSEIGNEMENT SUPERIEUR",
+    "objectifs": "Améliorer la coordination des services et assurer la bonne mise en œuvre des programmes dans l'Enseignement Supérieur",
+    "ae": 81926715,
+    "cp": 81926715
+  },
+  {
+    "chapitre": "MINISTERE DE LA RECHERCHE SCIENTIFIQUE ET DE L'INNOVATION",
+    "code": 136,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL AU SOUS-SECTEUR RECHERCHE ET INNOVATION",
+    "objectifs": "Améliorer la coordination, le fonctionnement et la performance du sous-secteur Recherche et Innovation",
+    "ae": 8194800,
+    "cp": 8194800
+  },
+  {
+    "chapitre": "MINISTERE DE LA RECHERCHE SCIENTIFIQUE ET DE L'INNOVATION",
+    "code": 193,
+    "programme": "DENSIFICATION DE LA RECHERCHE-DEVELOPPEMENT ET DE L'INNOVATION",
+    "objectifs": "Accroitre les performances de la recherche scientifique, technologique et d'innovation",
+    "ae": 21711200,
+    "cp": 21711200
+  },
+  {
+    "chapitre": "MINISTERE DES FINANCES",
+    "code": 31,
+    "programme": "MOBILISATION DES RECETTES FISCALES INTERNES NON PÉTROLIÈRES",
+    "objectifs": "Améliorer le recouvrement des recettes fiscales internes non pétrolières et le climat des affaires",
+    "ae": 19100246,
+    "cp": 19100246
+  },
+  {
+    "chapitre": "MINISTERE DES FINANCES",
+    "code": 32,
+    "programme": "GOUVERNANCE DOUANIÈRE, PROTECTION DE L'ESPACE ÉCONOMIQUE ET PARTICIPATION A LA SÉCURITÉ NATIONALE",
+    "objectifs": "Faciliter le commerce extérieur et contribuer à la sécurité nationale",
+    "ae": 13738648,
+    "cp": 13738648
+  },
+  {
+    "chapitre": "MINISTERE DES FINANCES",
+    "code": 33,
+    "programme": "GESTION DU TRÉSOR PUBLIC ET SUIVI DU SECTEUR FINANCIER",
+    "objectifs": "Améliorer l'efficacité du Trésor Public et optimiser le financement de l'économie.",
+    "ae": 18578268,
+    "cp": 18578268
+  },
+  {
+    "chapitre": "MINISTERE DES FINANCES",
+    "code": 34,
+    "programme": "GESTION BUDGÉTAIRE DE L'ÉTAT",
+    "objectifs": "Assurer la préparation adéquate des Projets de Loi de Finances et l'exécution efficace des budgets des Entités Publiques",
+    "ae": 22903525,
+    "cp": 22903525
+  },
+  {
+    "chapitre": "MINISTERE DES FINANCES",
+    "code": 92,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL",
+    "objectifs": "Assurer la mise en œuvre optimale des Programmes du Ministère",
+    "ae": 22394314,
+    "cp": 22394314
+  },
+  {
+    "chapitre": "MINISTERE DU COMMERCE",
+    "code": 15,
+    "programme": "APPUI AU DEVELOPPEMENT DES EXPORTATIONS",
+    "objectifs": "Contribuer à l'amélioration de la compétitivité des produits « made in Cameroon » dans les marchés d'exportation",
+    "ae": 652412,
+    "cp": 652412
+  },
+  {
+    "chapitre": "MINISTERE DU COMMERCE",
+    "code": 21,
+    "programme": "REGULATION DU MARCHE INTERIEUR",
+    "objectifs": "Veiller à l'approvisionnement régulier du marché intérieur dans les conditions de saine concurrence",
+    "ae": 5497124,
+    "cp": 5497124
+  },
+  {
+    "chapitre": "MINISTERE DU COMMERCE",
+    "code": 25,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DU MINCOMMERCE",
+    "objectifs": "Améliorer la coordination des services et assurer la bonne mise en œuvre des programmes.",
+    "ae": 4641376,
+    "cp": 4441376
+  },
+  {
+    "chapitre": "MINISTERE DU COMMERCE",
+    "code": 152,
+    "programme": "PROMOTION DE LA METROLOGIE, DE LA VEILLE NORMATIVE ET ENCADREMENT DU JUSTE PRIX",
+    "objectifs": "Ce programme a pour objectif de garantir l'équité dans les activités commerciales.",
+    "ae": 770088,
+    "cp": 770088
+  },
+  {
+    "chapitre": "MINISTERE DE L'ECONOMIE, DE LA PLANIFICATION ET DE L'AMENAGEMENT DU TERRITOIRE",
+    "code": 19,
+    "programme": "PLANIFICATION STRATEGIQUE ET AMENAGEMENT DURABLE DU TERRITOIRE",
+    "objectifs": "Veiller à la mise en œuvre de la SND-30, favoriser un développement harmonieux et durable du territoire et contribuer à la lutte contre la pauvreté",
+    "ae": 58170273,
+    "cp": 58170273
+  },
+  {
+    "chapitre": "MINISTERE DE L'ECONOMIE, DE LA PLANIFICATION ET DE L'AMENAGEMENT DU TERRITOIRE",
+    "code": 22,
+    "programme": "APPUI A LA TRANSFORMATION STRUCTURELLE POUR L'ACCELERATION DE LA CROISSANCE",
+    "objectifs": "Contribuer à la transformation structurelle en vue de l'accélération de la croissance économique",
+    "ae": 66644335,
+    "cp": 66644335
+  },
+  {
+    "chapitre": "MINISTERE DE L'ECONOMIE, DE LA PLANIFICATION ET DE L'AMENAGEMENT DU TERRITOIRE",
+    "code": 23,
+    "programme": "RENFORCEMENT DU PARTENARIAT AU DEVELOPPEMENT ET DE L'INTEGRATION REGIONALE",
+    "objectifs": "Améliorer l'alignement des apports de partenariats économiques et de l'intégration régionale",
+    "ae": 17144191,
+    "cp": 17144191
+  },
+  {
+    "chapitre": "MINISTERE DE L'ECONOMIE, DE LA PLANIFICATION ET DE L'AMENAGEMENT DU TERRITOIRE",
+    "code": 24,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DU SOUS-SECTEUR DE L'ECONOMIE, DE LA PLANIFICATION ET DE L'AMENAGEMENT DU TERRITOIRE",
+    "objectifs": "Améliorer la coordination des services et appuyer la mise en œuvre des programmes opérationnels",
+    "ae": 10173201,
+    "cp": 10173201
+  },
+  {
+    "chapitre": "MINISTERE DU TOURISME ET DES LOISIRS",
+    "code": 14,
+    "programme": "PROMOTION DU TOURISME ET DES LOISIRS",
+    "objectifs": "Attirer les visiteurs internationaux et internes",
+    "ae": 1594150,
+    "cp": 1594150
+  },
+  {
+    "chapitre": "MINISTERE DU TOURISME ET DES LOISIRS",
+    "code": 150,
+    "programme": "DIVERSIFICATION ET RENFORCEMENT DE L'OFFRE DU TOURISME ET DES LOISIRS",
+    "objectifs": "Accroitre l'offre des produits et services touristiques et de loisirs",
+    "ae": 4423575,
+    "cp": 4063575
+  },
+  {
+    "chapitre": "MINISTERE DU TOURISME ET DES LOISIRS",
+    "code": 151,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DANS LE SOUS SECTEUR TOURISME ET LOISIRS",
+    "objectifs": "Améliorer la coordination des services et assurer la bonne mise en œuvre des programmes",
+    "ae": 3876275,
+    "cp": 3651275
+  },
+  {
+    "chapitre": "MINISTERE DES ENSEIGNEMENTS SECONDAIRES",
+    "code": 105,
+    "programme": "RENFORCEMENT DE L'ACCES AUX ENSEIGNEMENTS SECONDAIRES",
+    "objectifs": "Accroître l'accès aux Enseignements Secondaires",
+    "ae": 134038800,
+    "cp": 134038800
+  },
+  {
+    "chapitre": "MINISTERE DES ENSEIGNEMENTS SECONDAIRES",
+    "code": 106,
+    "programme": "AMELIORATION DE LA QUALITE DE L'EDUCATION ET DE LA VIE EN MILIEU SCOLAIRE DANS LE SOUS-SECTEUR DES ENSEIGNEMENTS SECONDAIRES",
+    "objectifs": "Améliorer la qualité des enseignements et des apprentissages dans le sous-secteur des Enseignements Secondaires",
+    "ae": 285327000,
+    "cp": 285327000
+  },
+  {
+    "chapitre": "MINISTERE DES ENSEIGNEMENTS SECONDAIRES",
+    "code": 107,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DANS LE SOUS SECTEUR ENSEIGNEMENTS SECONDAIRES",
+    "objectifs": "Améliorer la gouvernance et la gestion optimale des ressources",
+    "ae": 52727200,
+    "cp": 52727200
+  },
+  {
+    "chapitre": "MINISTERE DES ENSEIGNEMENTS SECONDAIRES",
+    "code": 112,
+    "programme": "INTENSIFICATION DE LA PROFESSIONNALISATION ET OPTIMISATION DE LA FORMATION DANS LE SOUS SECTEUR DES ENSEIGNEMENTS SECONDAIRES",
+    "objectifs": "Accroître les compétences professionnelles des apprenants du secondaire technique et professionnel",
+    "ae": 112073000,
+    "cp": 112073000
+  },
+  {
+    "chapitre": "MINISTERE DE LA JEUNESSE ET DE L'EDUCATION CIVIQUE",
+    "code": 144,
+    "programme": "EDUCATION CIVIQUE ET VOLONTARIAT",
+    "objectifs": "Inculquer les valeurs civiques, morales et éthiques aux populations",
+    "ae": 8483999,
+    "cp": 8483999
+  },
+  {
+    "chapitre": "MINISTERE DE LA JEUNESSE ET DE L'EDUCATION CIVIQUE",
+    "code": 145,
+    "programme": "INSERTION SOCIO-ECONOMIQUE DES JEUNES",
+    "objectifs": "Accroitre l'insertion économique des jeunes encadrés dans les structures du MINJEC",
+    "ae": 10417555,
+    "cp": 10417555
+  },
+  {
+    "chapitre": "MINISTERE DE LA JEUNESSE ET DE L'EDUCATION CIVIQUE",
+    "code": 146,
+    "programme": "INTEGRATION NATIONALE ET PARTICIPATION CITOYENNE",
+    "objectifs": "Renforcer les valeurs républicaines au sein des populations",
+    "ae": 5306922,
+    "cp": 5306922
+  },
+  {
+    "chapitre": "MINISTERE DE LA JEUNESSE ET DE L'EDUCATION CIVIQUE",
+    "code": 147,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL AU MINISTERE DE LA JEUNESSE ET DE L'EDUCATION CIVIQUE",
+    "objectifs": "Améliorer la coordination des services et assurer la bonne mise en œuvre des programmes",
+    "ae": 5798524,
+    "cp": 5798524
+  },
+  {
+    "chapitre": "MINISTRE DE LA DECENTRALISATION ET DU DEVELOPPEMENT LOCAL",
+    "code": 98,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DANS LE SOUS SECTEUR DECENTRALISATION ET DEVELOPPEMENT LOCAL",
+    "objectifs": "Assurer la mise en œuvre optimale des Programmes du MINDDEVEL",
+    "ae": 4154820,
+    "cp": 4154820
+  },
+  {
+    "chapitre": "MINISTRE DE LA DECENTRALISATION ET DU DEVELOPPEMENT LOCAL",
+    "code": 99,
+    "programme": "APPROFONDISSEMENT DU PROCESSUS DE DÉCENTRALISATION",
+    "objectifs": "Renforcer l'autonomie administrative et financière des CTD",
+    "ae": 29891680,
+    "cp": 29891680
+  },
+  {
+    "chapitre": "MINISTRE DE LA DECENTRALISATION ET DU DEVELOPPEMENT LOCAL",
+    "code": 100,
+    "programme": "PROMOTION DU DEVELOPPEMENT LOCAL",
+    "objectifs": "Promouvoir la contribution des CTD à la croissance économique et le développement local",
+    "ae": 92118500,
+    "cp": 92118500
+  },
+  {
+    "chapitre": "MINISTERE DE L'ENVIRONNEMENT, DE LA PROTECTION DE LA NATURE ET DU DEVELOPPEMENT DURABLE",
+    "code": 2,
+    "programme": "CHANGEMENTS CLIMATIQUES, DESERTIFICATION ET SECHERESSE",
+    "objectifs": "Réduire la vulnérabilité des activités de développement des populations aux effets néfastes des changements climatiques, de la désertification et la sécheresse",
+    "ae": 5647000,
+    "cp": 5647000
+  },
+  {
+    "chapitre": "MINISTERE DE L'ENVIRONNEMENT, DE LA PROTECTION DE LA NATURE ET DU DEVELOPPEMENT DURABLE",
+    "code": 69,
+    "programme": "BIODIVERSITE",
+    "objectifs": "Assurer le suivi et la promotion de la conservation, de l'utilisation durable, de la restauration et de la valorisation de la Biodiversité",
+    "ae": 1853000,
+    "cp": 1853000
+  },
+  {
+    "chapitre": "MINISTERE DE L'ENVIRONNEMENT, DE LA PROTECTION DE LA NATURE ET DU DEVELOPPEMENT DURABLE",
+    "code": 91,
+    "programme": "DEVELOPPEMENT DURABLE",
+    "objectifs": "Promouvoir la prise en compte du développement durable dans les programmes et projets au Cameroun",
+    "ae": 894000,
+    "cp": 894000
+  },
+  {
+    "chapitre": "MINISTERE DE L'ENVIRONNEMENT, DE LA PROTECTION DE LA NATURE ET DU DEVELOPPEMENT DURABLE",
+    "code": 93,
+    "programme": "POLLUTIONS, NUISANCES ET SUBSTANCES CHIMIQUES NOCIVES ET/OU DANGEREUSES",
+    "objectifs": "Réduire les pollutions et nuisances environnementales",
+    "ae": 1291000,
+    "cp": 1291000
+  },
+  {
+    "chapitre": "MINISTERE DE L'ENVIRONNEMENT, DE LA PROTECTION DE LA NATURE ET DU DEVELOPPEMENT DURABLE",
+    "code": 94,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DU SOUS-SECTEUR ENVIRONNEMENT, PROTECTION DE LA NATURE ET DEVELOPPEMENT DURABLE",
+    "objectifs": "Améliorer la coordination des services et assurer la bonne mise en œuvre des programmes techniques du sous-secteur Environnement",
+    "ae": 2195000,
+    "cp": 2195000
+  },
+  {
+    "chapitre": "MINISTERE DES MINES, DE L'INDUSTRIE ET DU DEVELOPPEMENT TECHNOLOGIQUE",
+    "code": 35,
+    "programme": "AMELIORATION DE LA CONNAISSANCE DU POTENTIEL GEOLOGIQUE ET VALORISATION DES RESSOURCES MINIERES",
+    "objectifs": "Développer le secteur des mines et carrières",
+    "ae": 2734000,
+    "cp": 2734000
+  },
+  {
+    "chapitre": "MINISTERE DES MINES, DE L'INDUSTRIE ET DU DEVELOPPEMENT TECHNOLOGIQUE",
+    "code": 36,
+    "programme": "DEVELOPPEMENT ET DENSIFICATION DU TISSU INDUSTRIEL",
+    "objectifs": "Améliorer la contribution du secteur manufacturier à l'économie locale",
+    "ae": 3932500,
+    "cp": 3932500
+  },
+  {
+    "chapitre": "MINISTERE DES MINES, DE L'INDUSTRIE ET DU DEVELOPPEMENT TECHNOLOGIQUE",
+    "code": 37,
+    "programme": "MODERNISATION DE L'INFRASTRUCTURE QUALITE",
+    "objectifs": "Contribuer à l'amélioration de la compétitivité technique de l'industrie locale",
+    "ae": 838500,
+    "cp": 838500
+  },
+  {
+    "chapitre": "MINISTERE DES MINES, DE L'INDUSTRIE ET DU DEVELOPPEMENT TECHNOLOGIQUE",
+    "code": 38,
+    "programme": "DEVELOPPEMENT DES TECHNOLOGIES ET VALORISATION DES ACTIFS DE LA PROPRIETE INDUSTRIELLE",
+    "objectifs": "Favoriser le développement des technologies et la valorisation des actifs de propriété industrielle",
+    "ae": 952400,
+    "cp": 952400
+  },
+  {
+    "chapitre": "MINISTERE DES MINES, DE L'INDUSTRIE ET DU DEVELOPPEMENT TECHNOLOGIQUE",
+    "code": 39,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DANS LE SOUS-SECTEUR MINES, INDUSTRIE ET DEVELOPPEMENT TECHNOLOGIQUE",
+    "objectifs": "Améliorer la coordination des services et assurer la bonne mise en œuvre des programmes au MINMIDT",
+    "ae": 4696600,
+    "cp": 4696600
+  },
+  {
+    "chapitre": "MINISTERE DE L'AGRICULTURE ET DU DEVELOPPEMENT RURAL",
+    "code": 184,
+    "programme": "PRODUCTION ET PRODUCTIVITE DES FILIERES AGRICOLES",
+    "objectifs": "Accroitre la production annuelle des principales filières végétales",
+    "ae": 23940024,
+    "cp": 23940024
+  },
+  {
+    "chapitre": "MINISTERE DE L'AGRICULTURE ET DU DEVELOPPEMENT RURAL",
+    "code": 185,
+    "programme": "GESTION DURABLE DES SYSTEMES DE PRODUCTION AGRICOLE ET SECURITE ALIMENTAIRE",
+    "objectifs": "Améliorer l'exploitation durable des terres arables et diminuer le taux d'insécurité alimentaire",
+    "ae": 16336000,
+    "cp": 16336000
+  },
+  {
+    "chapitre": "MINISTERE DE L'AGRICULTURE ET DU DEVELOPPEMENT RURAL",
+    "code": 186,
+    "programme": "DEVELOPPEMENT DES INFRASTRUCTURES AGRICOLES, RURALES ET MECANISATION AGRICOLE",
+    "objectifs": "Améliorer l'accès aux infrastructures de production et équipements agricoles en milieu rural",
+    "ae": 33278530,
+    "cp": 33278530
+  },
+  {
+    "chapitre": "MINISTERE DE L'AGRICULTURE ET DU DEVELOPPEMENT RURAL",
+    "code": 187,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DANS LE SOUS SECTEUR AGRICULTURE ET DEVELOPPEMENT RURAL",
+    "objectifs": "Assurer la bonne mise en œuvre des programmes au Ministère de l'Agriculture et du Développement Rural",
+    "ae": 33019656,
+    "cp": 33019656
+  },
+  {
+    "chapitre": "MINISTERE DE L'ELEVAGE, DES PECHES ET DES INDUSTRIES ANIMALES",
+    "code": 53,
+    "programme": "DEVELOPPEMENT DES PRODUCTIONS ET DES INDUSTRIES ANIMALES",
+    "objectifs": "Assurer l'accroissement de la production des produits d'origine animale",
+    "ae": 23109076,
+    "cp": 23109076
+  },
+  {
+    "chapitre": "MINISTERE DE L'ELEVAGE, DES PECHES ET DES INDUSTRIES ANIMALES",
+    "code": 55,
+    "programme": "AMELIORATION DE LA COUVERTURE SANITAIRE DES CHEPTELS ET DE LA LUTTE CONTRE LES ZOONOSES",
+    "objectifs": "Protéger le cheptel des maladies animales et améliorer la qualité sanitaire des denrées alimentaires",
+    "ae": 5533181,
+    "cp": 5533181
+  },
+  {
+    "chapitre": "MINISTERE DE L'ELEVAGE, DES PECHES ET DES INDUSTRIES ANIMALES",
+    "code": 57,
+    "programme": "DEVELOPPEMENT DES PRODUCTIONS HALIEUTIQUES",
+    "objectifs": "Assurer une production croissante et durable des produits halieutiques",
+    "ae": 15814075,
+    "cp": 15814075
+  },
+  {
+    "chapitre": "MINISTERE DE L'ELEVAGE, DES PECHES ET DES INDUSTRIES ANIMALES",
+    "code": 59,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DANS LE SOUS SECTEUR ELEVAGE, PECHES ET INDUSTRIES ANIMALES",
+    "objectifs": "Améliorer la coordination des services et assurer la bonne mise en œuvre des programmes au MINEPIA",
+    "ae": 8527667,
+    "cp": 8527667
+  },
+  {
+    "chapitre": "MINISTERE DE L'EAU ET DE L'ENERGIE",
+    "code": 16,
+    "programme": "OFFRE D'ENERGIE",
+    "objectifs": "Produire l'énergie en quantité abondante pour améliorer le cadre de vie des populations",
+    "ae": 202138774,
+    "cp": 202138774
+  },
+  {
+    "chapitre": "MINISTERE DE L'EAU ET DE L'ENERGIE",
+    "code": 137,
+    "programme": "ACCES A L'ENERGIE",
+    "objectifs": "Accroître l'accès à l'énergie pour les ménages et les industries",
+    "ae": 146482372,
+    "cp": 146482372
+  },
+  {
+    "chapitre": "MINISTERE DE L'EAU ET DE L'ENERGIE",
+    "code": 138,
+    "programme": "ACCES A L'EAU POTABLE ET L'ASSAINISSEMENT LIQUIDE",
+    "objectifs": "Améliorer l'accès à l'eau potable et à l'assainissement liquide des ménages et des opérateurs économiques",
+    "ae": 62274020,
+    "cp": 62274020
+  },
+  {
+    "chapitre": "MINISTERE DE L'EAU ET DE L'ENERGIE",
+    "code": 139,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DANS LE SOUS-SECTEUR EAU ET ENERGIE",
+    "objectifs": "Améliorer la coordination des services et assurer la bonne mise en œuvre des programmes",
+    "ae": 82463334,
+    "cp": 82463334
+  },
+  {
+    "chapitre": "MINISTERE DES FORETS ET DE LA FAUNE",
+    "code": 54,
+    "programme": "Aménagement et renouvellement de la ressource forestière",
+    "objectifs": "Assurer la gestion durable des forêts",
+    "ae": 5277450,
+    "cp": 5277450
+  },
+  {
+    "chapitre": "MINISTERE DES FORETS ET DE LA FAUNE",
+    "code": 56,
+    "programme": "Sécurisation et valorisation des ressources fauniques et des Aires protégées",
+    "objectifs": "Assurer la gestion durable et la valorisation de la faune et des aires protégées",
+    "ae": 3142442,
+    "cp": 3142442
+  },
+  {
+    "chapitre": "MINISTERE DES FORETS ET DE LA FAUNE",
+    "code": 58,
+    "programme": "Valorisation des ressources forestières ligneuses et non ligneuses",
+    "objectifs": "Optimiser l'utilisation des ressources ligneuses et non ligneuses.",
+    "ae": 2329400,
+    "cp": 2329400
+  },
+  {
+    "chapitre": "MINISTERE DES FORETS ET DE LA FAUNE",
+    "code": 60,
+    "programme": "Gouvernance et appui institutionnel dans le sous-secteur forêts et faune",
+    "objectifs": "Accroître et améliorer les capacités institutionnelles, techniques et opérationnelles des acteurs",
+    "ae": 11304708,
+    "cp": 11304708
+  },
+  {
+    "chapitre": "MINISTERE DE L'EMPLOI ET DE LA FORMATION PROFESSIONNELLE",
+    "code": 120,
+    "programme": "PROMOTION DE L'EMPLOI DÉCENT ET DE L'INSERTION PROFESSIONNELLE",
+    "objectifs": "Promouvoir l'emploi décent à travers l'élargissement et la valorisation des opportunités de création d'emploi",
+    "ae": 4461050,
+    "cp": 4461050
+  },
+  {
+    "chapitre": "MINISTERE DE L'EMPLOI ET DE LA FORMATION PROFESSIONNELLE",
+    "code": 121,
+    "programme": "DÉVELOPPEMENT DES COMPÉTENCES",
+    "objectifs": "Développer les compétences des personnes en quête de qualification professionnelle",
+    "ae": 18828479,
+    "cp": 18814479
+  },
+  {
+    "chapitre": "MINISTERE DE L'EMPLOI ET DE LA FORMATION PROFESSIONNELLE",
+    "code": 122,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DANS LE SOUS-SECTEUR DE L'EMPLOI ET DE LA FORMATION PROFESSIONNELLE",
+    "objectifs": "Améliorer la coordination des services et assurer la bonne mise en œuvre des programmes",
+    "ae": 9844971,
+    "cp": 9844471
+  },
+  {
+    "chapitre": "MINISTERE DES TRAVAUX PUBLICS",
+    "code": 125,
+    "programme": "CONSTRUCTION DES ROUTES ET AUTRES INFRASTRUCTURES",
+    "objectifs": "Développer et moderniser les infrastructures routières et de franchissement",
+    "ae": 457358069,
+    "cp": 375581585
+  },
+  {
+    "chapitre": "MINISTERE DES TRAVAUX PUBLICS",
+    "code": 126,
+    "programme": "REHABILITATION, MAINTENANCE ET ENTRETIEN DES ROUTES ET AUTRES INFRASTRUCTURES",
+    "objectifs": "Restaurer et Améliorer le réseau bitumé et en terre",
+    "ae": 237949426,
+    "cp": 200334419
+  },
+  {
+    "chapitre": "MINISTERE DES TRAVAUX PUBLICS",
+    "code": 127,
+    "programme": "RÉALISATION DES ÉTUDES TECHNIQUES D'INFRASTRUCTURES",
+    "objectifs": "Améliorer la qualité des études en vue d'optimiser le coût et la qualité des travaux d'infrastructures",
+    "ae": 2912284,
+    "cp": 2912284
+  },
+  {
+    "chapitre": "MINISTERE DES TRAVAUX PUBLICS",
+    "code": 128,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL",
+    "objectifs": "Optimiser les prestations réalisées",
+    "ae": 59748212,
+    "cp": 59748212
+  },
+  {
+    "chapitre": "MINISTERE DES DOMAINES, DU CADASTRE ET DES AFFAIRES FONCIERES",
+    "code": 26,
+    "programme": "MODERNISATION DU CADASTRE",
+    "objectifs": "Disposer d'un cadastre national numérique apte à répondre aux défis de gouvernance foncière moderne",
+    "ae": 1567500,
+    "cp": 1567500
+  },
+  {
+    "chapitre": "MINISTERE DES DOMAINES, DU CADASTRE ET DES AFFAIRES FONCIERES",
+    "code": 61,
+    "programme": "PROTECTION ET DEVELOPPEMENT DU PATRIMOINE DE L'ETAT",
+    "objectifs": "Améliorer la gestion du Patrimoine de l'Etat",
+    "ae": 12591987,
+    "cp": 12591987
+  },
+  {
+    "chapitre": "MINISTERE DES DOMAINES, DU CADASTRE ET DES AFFAIRES FONCIERES",
+    "code": 66,
+    "programme": "PROTECTION ET VALORISATION DES DOMAINES",
+    "objectifs": "Améliorer la gestion domaniale",
+    "ae": 3214658,
+    "cp": 3214658
+  },
+  {
+    "chapitre": "MINISTERE DES DOMAINES, DU CADASTRE ET DES AFFAIRES FONCIERES",
+    "code": 68,
+    "programme": "OPTIMISATION DE LA GESTION DES AFFAIRES FONCIERES",
+    "objectifs": "Améliorer la gestion des affaires foncières",
+    "ae": 1721500,
+    "cp": 1721500
+  },
+  {
+    "chapitre": "MINISTERE DES DOMAINES, DU CADASTRE ET DES AFFAIRES FONCIERES",
+    "code": 75,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DU SOUS-SECTEUR DOMAINE, CADASTRE ET AFFAIRES FONCIERES",
+    "objectifs": "Améliorer la coordination des services et assurer la bonne mise en œuvre des Programmes",
+    "ae": 6072355,
+    "cp": 6072355
+  },
+  {
+    "chapitre": "MINISTERE DE L'HABITAT ET DU DEVELOPPEMENT URBAIN",
+    "code": 108,
+    "programme": "DEVELOPPEMENT DE L'HABITAT",
+    "objectifs": "Améliorer l'accès à l'habitat décent",
+    "ae": 45201313,
+    "cp": 45201313
+  },
+  {
+    "chapitre": "MINISTERE DE L'HABITAT ET DU DEVELOPPEMENT URBAIN",
+    "code": 109,
+    "programme": "AMÉLIORATION DE L'ENVIRONNEMENT SOCIAL URBAIN",
+    "objectifs": "Doter le sous secteur urbain et les CTD d'outils ou instruments appropriés de gestion urbaine",
+    "ae": 1785887,
+    "cp": 1785887
+  },
+  {
+    "chapitre": "MINISTERE DE L'HABITAT ET DU DEVELOPPEMENT URBAIN",
+    "code": 111,
+    "programme": "DEVELOPPEMENT DES INFRASTRUCTURES DE TRANSPORT URBAIN ET DE MOBILITE DURABLE.",
+    "objectifs": "Améliorer les conditions de mobilité dans les villes.",
+    "ae": 103332953,
+    "cp": 103332953
+  },
+  {
+    "chapitre": "MINISTERE DE L'HABITAT ET DU DEVELOPPEMENT URBAIN",
+    "code": 113,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DU SOUS-SECTEUR URBAIN.",
+    "objectifs": "Assurer la mise en œuvre optimale des programmes du MINHDU.",
+    "ae": 7434813,
+    "cp": 7434813
+  },
+  {
+    "chapitre": "MINISTERE DES PETITES ET MOYENNES ENTREPRISES, DE L'ECONOMIE SOCIALE ET DE L'ARTISANAT",
+    "code": 43,
+    "programme": "PROMOTION DE L'ENTREPRENEURIAT",
+    "objectifs": "Accroitre le nombre des Petites et Moyennes Entreprises, Unités de l'Economie et des artisans créés et viables.",
+    "ae": 3796089,
+    "cp": 3796089
+  },
+  {
+    "chapitre": "MINISTERE DES PETITES ET MOYENNES ENTREPRISES, DE L'ECONOMIE SOCIALE ET DE L'ARTISANAT",
+    "code": 44,
+    "programme": "TRANSFORMATION ET MODERNISATION DES UNITES DE PRODUCTION",
+    "objectifs": "Accroitre la production de Petites et Moyennes Entreprises, unités de l'Economie sociale et des artisans du secteur secondaire",
+    "ae": 6726640,
+    "cp": 6726640
+  },
+  {
+    "chapitre": "MINISTERE DES PETITES ET MOYENNES ENTREPRISES, DE L'ECONOMIE SOCIALE ET DE L'ARTISANAT",
+    "code": 167,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DU MINISTERE",
+    "objectifs": "Assurer la mise en œuvre optimale des Programmes du Ministère",
+    "ae": 5966011,
+    "cp": 5966011
+  },
+  {
+    "chapitre": "MINISTERE DE LA SANTE PUBLIQUE",
+    "code": 45,
+    "programme": "PREVENTION DE LA MALADIE",
+    "objectifs": "Porter la couverture vaccinale au RR1 de 74% à au moins 80%",
+    "ae": 58254620,
+    "cp": 58254620
+  },
+  {
+    "chapitre": "MINISTERE DE LA SANTE PUBLIQUE",
+    "code": 46,
+    "programme": "PROMOTION DE LA SANTE ET NUTRITION",
+    "objectifs": "Amener la population à adopter les comportements sains et favorables à la santé",
+    "ae": 5412790,
+    "cp": 5412790
+  },
+  {
+    "chapitre": "MINISTERE DE LA SANTE PUBLIQUE",
+    "code": 47,
+    "programme": "RENFORCEMENT DU SYSTEME DE SANTE",
+    "objectifs": "Accroitre les capacités institutionnelles des structures sanitaires",
+    "ae": 125504857,
+    "cp": 130106085
+  },
+  {
+    "chapitre": "MINISTERE DE LA SANTE PUBLIQUE",
+    "code": 48,
+    "programme": "PRISE EN CHARGE DES CAS",
+    "objectifs": "Faire passer le taux de mortalité en dessous de 70 pour 100 000 naissances",
+    "ae": 51531852,
+    "cp": 51531852
+  },
+  {
+    "chapitre": "MINISTERE DE LA SANTE PUBLIQUE",
+    "code": 49,
+    "programme": "GOUVERNANCE ET PILOTAGE STRATEGIQUE DU SYSTEME DE SANTE",
+    "objectifs": "Améliorer la coordination des services et assurer la bonne mise en œuvre des programmes au ministère",
+    "ae": 51893653,
+    "cp": 51893653
+  },
+  {
+    "chapitre": "MINISTERE DU TRAVAIL ET DE LA SECURITE SOCIALE",
+    "code": 17,
+    "programme": "PROMOTION DE LA SECURITE SOCIALE POUR TOUS",
+    "objectifs": "Améliorer la couverture de sécurité sociale au Cameroun",
+    "ae": 1018000,
+    "cp": 1018000
+  },
+  {
+    "chapitre": "MINISTERE DU TRAVAIL ET DE LA SECURITE SOCIALE",
+    "code": 18,
+    "programme": "PROMOTION DU TRAVAIL DECENT",
+    "objectifs": "Améliorer le dispositif de santé et de sécurité en milieu de travail",
+    "ae": 3113787,
+    "cp": 3113787
+  },
+  {
+    "chapitre": "MINISTERE DU TRAVAIL ET DE LA SECURITE SOCIALE",
+    "code": 159,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DU SOUS SECTEUR TRAVAIL ET SECURITE SOCIALE",
+    "objectifs": "Améliorer la Coordination des services et assurer la bonne mise en œuvre des programmes du Ministère du Travail et de la Sécurité",
+    "ae": 3768213,
+    "cp": 3768213
+  },
+  {
+    "chapitre": "MINISTERE DES AFFAIRES SOCIALES",
+    "code": 70,
+    "programme": "PROTECTION SOCIALE DE L'ENFANCE",
+    "objectifs": "Assurer une offre de service inclusive et adéquate aux enfants ayant besoin de protection sociale",
+    "ae": 2881400,
+    "cp": 2881400
+  },
+  {
+    "chapitre": "MINISTERE DES AFFAIRES SOCIALES",
+    "code": 71,
+    "programme": "PROTECTION SOCIALE DES GROUPES A VULNERABILITÉS SPECIFIQUES ET SOLIDARITÉ NATIONALE",
+    "objectifs": "Accroitre l'offre des services de protection sociale aux groupes et communautés en fonction de leurs vulnérabilités spécifiques",
+    "ae": 16889250,
+    "cp": 16889250
+  },
+  {
+    "chapitre": "MINISTERE DES AFFAIRES SOCIALES",
+    "code": 179,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DANS LE SOUS-SECTEUR DES AFFAIRES SOCIALES",
+    "objectifs": "Assurer la mise en œuvre optimale des programmes du MINAS",
+    "ae": 5554350,
+    "cp": 5554350
+  },
+  {
+    "chapitre": "MINISTERE DE LA PROMOTION DE LA FEMME ET DE LA FAMILLE",
+    "code": 140,
+    "programme": "AUTONOMISATION ECONOMIQUE DES FEMMES",
+    "objectifs": "Renforcer le pouvoir économique des femmes",
+    "ae": 3340180,
+    "cp": 3340180
+  },
+  {
+    "chapitre": "MINISTERE DE LA PROMOTION DE LA FEMME ET DE LA FAMILLE",
+    "code": 141,
+    "programme": "PROMOTION DU STATUT SOCIAL DE LA FEMME ET DU GENRE",
+    "objectifs": "Améliorer le statut et la situation de la femme",
+    "ae": 1765200,
+    "cp": 1765200
+  },
+  {
+    "chapitre": "MINISTERE DE LA PROMOTION DE LA FEMME ET DE LA FAMILLE",
+    "code": 142,
+    "programme": "DEVELOPPEMENT DE LA FAMILLE ET PROTECTION DES DROITS DE L'ENFANT",
+    "objectifs": "Renforcer le rôle social de la famille et la protection des droits de l'enfant.",
+    "ae": 1969700,
+    "cp": 1969700
+  },
+  {
+    "chapitre": "MINISTERE DE LA PROMOTION DE LA FEMME ET DE LA FAMILLE",
+    "code": 143,
+    "programme": "APPUI INSTITUTIONNEL ET GOUVERNANCE",
+    "objectifs": "Renforcer la gouvernance et les capacités institutionnelles",
+    "ae": 3706920,
+    "cp": 3706920
+  },
+  {
+    "chapitre": "MINISTERE DES POSTES ET TELECOMMUNICATIONS",
+    "code": 129,
+    "programme": "DENSIFICATION DU RESEAU ET AMELIORATION DE LA COUVERTURE POSTALE NATIONALE",
+    "objectifs": "Accroitre l'accès au réseau postal national.",
+    "ae": 1388063,
+    "cp": 1388063
+  },
+  {
+    "chapitre": "MINISTERE DES POSTES ET TELECOMMUNICATIONS",
+    "code": 130,
+    "programme": "DEVELOPPEMENT DE L'ECOSYSTEME NATIONAL DU NUMERIQUE",
+    "objectifs": "Accroitre l'accessibilité du numérique et promouvoir son usage.",
+    "ae": 10330875,
+    "cp": 10330875
+  },
+  {
+    "chapitre": "MINISTERE DES POSTES ET TELECOMMUNICATIONS",
+    "code": 131,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DU MINISTERE DES POSTES ET TELECOMMUNICATIONS",
+    "objectifs": "Assurer la mise en œuvre optimale des Programmes du Ministère",
+    "ae": 5855018,
+    "cp": 5855018
+  },
+  {
+    "chapitre": "MINISTERE DES POSTES ET TELECOMMUNICATIONS",
+    "code": 132,
+    "programme": "SECURISATION DE L'ECOSYSTEME NATIONAL DU NUMERIQUE",
+    "objectifs": "Garantir la sécurité du cyberespace national",
+    "ae": 1037044,
+    "cp": 1037044
+  },
+  {
+    "chapitre": "MINISTERE DES TRANSPORTS",
+    "code": 153,
+    "programme": "DEVELOPPEMENT DES TRANSPORTS ROUTIERS, DE L'INTERMODALITE ET DE LA SECURITE ROUTIERE",
+    "objectifs": "Améliorer l'offre et les services des transports routiers",
+    "ae": 1558000,
+    "cp": 1558000
+  },
+  {
+    "chapitre": "MINISTERE DES TRANSPORTS",
+    "code": 154,
+    "programme": "DEVELOPPEMENT DU TRANSPORT AERIEN ET REGULATION DE L'AVIATION CIVILE",
+    "objectifs": "Améliorer l'offre de service aérien, la sécurité et la sureté de l'aviation civile",
+    "ae": 913500,
+    "cp": 913500
+  },
+  {
+    "chapitre": "MINISTERE DES TRANSPORTS",
+    "code": 155,
+    "programme": "DEVELOPPEMENT DU TRANSPORT MARITIME, FLUVIAL, LACUSTRE ET DES ACTIVITES PORTUAIRES",
+    "objectifs": "Accroitre l'offre des services des transports maritimes, fluviaux, lacustres et des activités portuaires",
+    "ae": 37082035,
+    "cp": 37082035
+  },
+  {
+    "chapitre": "MINISTERE DES TRANSPORTS",
+    "code": 156,
+    "programme": "DEVELOPPEMENT DU TRANSPORT FERROVIAIRE",
+    "objectifs": "Améliorer l'offre et les services du transport ferroviaire.",
+    "ae": 11400500,
+    "cp": 11400500
+  },
+  {
+    "chapitre": "MINISTERE DES TRANSPORTS",
+    "code": 157,
+    "programme": "DEVELOPPEMENT ET MODERNISATION DES SYSTEMES DE COLLECTE, DE PRODUCTION ET DE VULGARISATION DES INFORMATIONS METEOROLOGIQUES",
+    "objectifs": "Améliorer la production et la vulgarisation des informations météorologiques",
+    "ae": 1100195,
+    "cp": 1100195
+  },
+  {
+    "chapitre": "MINISTERE DES TRANSPORTS",
+    "code": 158,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL AU SOUS-SECTEUR DES TRANSPORTS",
+    "objectifs": "Assurer la bonne mise en œuvre des programmes du MINT",
+    "ae": 5001770,
+    "cp": 5001770
+  },
+  {
+    "chapitre": "COMITE NATIONAL DE DESARMEMENT, DE DEMOBILISATION ET DE REINTEGRATION",
+    "code": 82,
+    "programme": "DESARMEMENT DES COMBATTANTS ET DEMOBILISATION",
+    "objectifs": "Accroitre la reddition des combattants du Boko-Haram et des groupes armés",
+    "ae": 814000,
+    "cp": 814000
+  },
+  {
+    "chapitre": "COMITE NATIONAL DE DESARMEMENT, DE DEMOBILISATION ET DE REINTEGRATION",
+    "code": 83,
+    "programme": "REINTEGRATION DES EX-COMBATTANTS",
+    "objectifs": "Améliorer la conversion holistique et la réinsertion des ex-combattants",
+    "ae": 813000,
+    "cp": 813000
+  },
+  {
+    "chapitre": "COMITE NATIONAL DE DESARMEMENT, DE DEMOBILISATION ET DE REINTEGRATION",
+    "code": 180,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DU CNDDR",
+    "objectifs": "Améliorer le fonctionnement et la performance des services",
+    "ae": 2785000,
+    "cp": 2785000
+  },
+  {
+    "chapitre": "CONSEIL CONSTITUTIONNEL",
+    "code": 74,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DU CONSEIL CONSTITUTIONNEL",
+    "objectifs": "Assurer l'opérationnalisation et la coordination des services du Conseil Constitutionnel",
+    "ae": 4144000,
+    "cp": 4144000
+  },
+  {
+    "chapitre": "MINISTERE DE LA FONCTION PUBLIQUE ET DE LA REFORME ADMINISTRATIVE",
+    "code": 40,
+    "programme": "AMELIORATION DE LA GESTION DES RESSOURCES HUMAINES DE L'ETAT",
+    "objectifs": "Optimiser la gestion des ressources humaines de l'Etat",
+    "ae": 3689568,
+    "cp": 5467803
+  },
+  {
+    "chapitre": "MINISTERE DE LA FONCTION PUBLIQUE ET DE LA REFORME ADMINISTRATIVE",
+    "code": 41,
+    "programme": "MODERNISATION DES SERVICES PUBLICS",
+    "objectifs": "Contribuer à accroitre la performance des services publics",
+    "ae": 4094405,
+    "cp": 4094405
+  },
+  {
+    "chapitre": "MINISTERE DE LA FONCTION PUBLIQUE ET DE LA REFORME ADMINISTRATIVE",
+    "code": 42,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL AU MINFOPRA",
+    "objectifs": "Assurer la mise en œuvre optimale des programmes du MINFOPRA",
+    "ae": 9368477,
+    "cp": 9152792
+  },
+  {
+    "chapitre": "ELECTIONS CAMEROON",
+    "code": 81,
+    "programme": "ORGANISATION, GESTION ET SUPERVISION DU SYSTÈME ÉLECTORAL ET RÉFERENDAIRE AU CAMEROUN",
+    "objectifs": "Renforcer la crédibilité des scrutins et le consensus entre les acteurs du processus électoral",
+    "ae": 4162000,
+    "cp": 4162000
+  },
+  {
+    "chapitre": "ELECTIONS CAMEROON",
+    "code": 183,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DE ELECAM",
+    "objectifs": "Assurer la mise en œuvre optimale des programmes opérationnels",
+    "ae": 9054800,
+    "cp": 8421000
+  },
+  {
+    "chapitre": "COMMISSION DES DROITS DE L'HOMME DU CAMEROUN",
+    "code": 84,
+    "programme": "PROMOTION DES DROITS DE L'HOMME",
+    "objectifs": "Renforcer la culture des Droits de l'homme au Cameroun et réduire les violations",
+    "ae": 419400,
+    "cp": 419400
+  },
+  {
+    "chapitre": "COMMISSION DES DROITS DE L'HOMME DU CAMEROUN",
+    "code": 85,
+    "programme": "PROTECTION DES DROITS DE L'HOMME",
+    "objectifs": "Lutter contre l'impunité et favoriser l'accès des victimes à une réparation",
+    "ae": 437200,
+    "cp": 437200
+  },
+  {
+    "chapitre": "COMMISSION DES DROITS DE L'HOMME DU CAMEROUN",
+    "code": 86,
+    "programme": "PRÉVENTION DE LA TORTURE",
+    "objectifs": "éradiquer le recours à la torture et autres peines ou traitements cruels, inhumains et dégradants",
+    "ae": 478700,
+    "cp": 478700
+  },
+  {
+    "chapitre": "COMMISSION DES DROITS DE L'HOMME DU CAMEROUN",
+    "code": 190,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL",
+    "objectifs": "Assurer la mise en œuvre optimale des programmes",
+    "ae": 3460700,
+    "cp": 3460700
+  },
+  {
+    "chapitre": "SENAT",
+    "code": 178,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DES SERVICES DU SENAT",
+    "objectifs": "Assurer la mise en œuvre optimale des Programmes du SENAT",
+    "ae": 16162000,
+    "cp": 16162000
+  },
+  {
+    "chapitre": "COMMISSION NATIONALE POUR LA PROMOTION DU BILINGUISME ET DU MULTICULTURALISME",
+    "code": 181,
+    "programme": "GOUVERNANCE ET APPUI INSTITUTIONNEL DE LA CNPBM",
+    "objectifs": "Assurer la mise en œuvre optimale des Programmes de la CNPBM",
+    "ae": 3498000,
+    "cp": 3498000
+  },
+  {
+    "chapitre": "PENSIONS",
+    "code": 200,
+    "programme": "PENSIONS",
+    "objectifs": "Assurer le paiement des allocations de retraite",
+    "ae": 270369000,
+    "cp": 270369000
+  },
+  {
+    "chapitre": "DETTE PUBLIQUE EXTERIEURE",
+    "code": 199,
+    "programme": "REMBOURSEMENT DE LA DETTE PUBLIQUE EXTERIEURE",
+    "objectifs": "Honorer les engagements de l'Etat vis-à-vis des bailleurs",
+    "ae": 941000000,
+    "cp": 941000000
+  },
+  {
+    "chapitre": "DETTE PUBLIQUE INTERIEURE",
+    "code": 203,
+    "programme": "REMBOURSEMENT DE LA DETTE PUBLIQUE INTERIEURE",
+    "objectifs": "Honorer les engagements de l'Etat vis-à-vis des résidents",
+    "ae": 1124500000,
+    "cp": 1124500000
+  },
+  {
+    "chapitre": "SUBVENTIONS ET CONTRIBUTIONS",
+    "code": 202,
+    "programme": "SUBVENTIONS ET CONTRIBUTIONS",
+    "objectifs": "Contribuer au bon fonctionnement des organismes et établissements publics",
+    "ae": 175705000,
+    "cp": 175705000
+  },
+  {
+    "chapitre": "DEPENSES COMMUNES",
+    "code": 201,
+    "programme": "DEPENSES COMMUNES DE FONCTIONNEMENT",
+    "objectifs": "Couvrir les charges non réparties de l'Etat en fonctionnement",
+    "ae": 218682000,
+    "cp": 218682000
+  },
+  {
+    "chapitre": "PARTICIPATIONS",
+    "code": 198,
+    "programme": "PARTICIPATION DE L'ETAT DANS LES ENTREPRISES PARAPUBLIQUES ET PRIVEES",
+    "objectifs": "Couvrir les prises de participation de l'Etat",
+    "ae": 10000000,
+    "cp": 10000000
+  },
+  {
+    "chapitre": "REHABILITATION/RESTRUCTURATION",
+    "code": 196,
+    "programme": "REHABILITATION ET RESTRUCTURATION DES ENTREPRISES PUBIQUES",
+    "objectifs": "Assurer la réhabilitation et la restructuration des sociétés de l'Etat",
+    "ae": 5000000,
+    "cp": 5000000
+  },
+  {
+    "chapitre": "INTERVENTIONS EN INVESTISSEMENTS",
+    "code": 195,
+    "programme": "INTERVENTIONS EN INVESTISSEMENT",
+    "objectifs": "Couvrir les charges non réparties de l'Etat en fonctionnement",
+    "ae": 100042084,
+    "cp": 100042084
+  },
+  {
+    "chapitre": "REPORT",
+    "code": 197,
+    "programme": "PRISE EN CHARGE DES REPORTS DE CREDITS",
+    "objectifs": "Poursuivre la réalisation des projets dont l'exécution budgétaire est inachevée en 2024",
+    "ae": 7000000,
+    "cp": 7000000
+  }
+]

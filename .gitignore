@@ -1,0 +1,35 @@
+# Environnement virtuel
+.venv/
+
+# Cache
+__pycache__/
+.pytest_cache/
+
+# VS Code
+.vscode/
+
+# Logs
+logs/
+
+# Outputs générés
+outputs/
+data/processed/
+
+# Modèles lourds
+*.npy
+*.pt
+*.h5
+*.pkl
+
+# Fichiers Excel générés
+*.xlsx
+
+# Fichiers images générés
+*.png
+
+# Notebooks checkpoints
+.ipynb_checkpoints/
+
+# Fichiers système
+.DS_Store
+Thumbs.db
