@@ -1,0 +1,14 @@
+[project]
+name = "audit_semantique"
+version = "1.0.0"
+description = "Audit sémantique des Lois de Finances du Cameroun via NLP / Transformers."
+authors = [
+    {name = "ISE3-DS, ISSEA Yaoundé"}
+]
+readme = "README.md"
+requires-python = ">=3.11,<4.0"
+dependencies = []
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

@@ -1,0 +1,63 @@
+Metadata-Version: 2.4
+Name: audit-semantique-cameroun
+Version: 0.1.0
+Author-email: Irch Defluviaire <ngoubiliirch@gmail.com>
+Requires-Python: <4.0,>=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: pandas<3
+Requires-Dist: numpy<3.0.0,>=2.4.2
+Requires-Dist: matplotlib<4.0.0,>=3.10.8
+Requires-Dist: requests<3.0.0,>=2.32.5
+Requires-Dist: transformers<6.0.0,>=5.1.0
+Requires-Dist: tqdm<5.0.0,>=4.67.3
+Requires-Dist: sentence-transformers<6.0.0,>=5.2.2
+Requires-Dist: seaborn<0.14.0,>=0.13.2
+Requires-Dist: plotly<7.0.0,>=6.5.2
+Requires-Dist: hdbscan<0.9.0,>=0.8.41
+Requires-Dist: numba>=0.58
+Requires-Dist: llvmlite>=0.41
+Requires-Dist: umap-learn<0.6.0,>=0.5.11
+Requires-Dist: torch>=2.0.0
+Requires-Dist: scikit-learn>=1.3.0
+Requires-Dist: scipy>=1.11.0
+Requires-Dist: gensim>=4.3.0
+Requires-Dist: pyyaml>=6.0
+Requires-Dist: loguru<0.8.0,>=0.7.3
+Requires-Dist: openpyxl<4.0.0,>=3.1.5
+Requires-Dist: dash<5.0.0,>=4.0.0
+Requires-Dist: dash-bootstrap-components<3.0.0,>=2.0.4
+Requires-Dist: wordcloud<2.0.0,>=1.9.6
+Requires-Dist: pillow<13.0.0,>=12.1.1
+
+# Audit Sémantique Cameroun
+
+Ce package fournit des outils pour l'audit sémantique des lois de finances du Cameroun à l'aide de méthodes NLP et de modèles Transformers.
+
+## Installation
+
+```bash
+pip install .
+```
+
+## Utilisation
+
+Importez le package dans vos scripts Python :
+
+```python
+import audit_semantique
+```
+
+## Structure du package
+- `audit` : Audit sémantique principal
+- `clustering` : Algorithmes de clustering
+- `modeling` : Modèles et embeddings
+- `preprocessing` : Prétraitement des données
+- `stats` : Statistiques et tests
+- `topic_modeling` : Modélisation de sujets (LDA)
+- `visualization` : Visualisation des résultats
+
+## Auteur
+ISE3-DS, ISSEA Yaoundé
+
+## Licence
+MIT
