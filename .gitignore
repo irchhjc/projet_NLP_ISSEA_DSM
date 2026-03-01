@@ -1,7 +1,22 @@
 ### Environnements / dépendances
-.audit/
+# Environnements Python
 .venv/
 venv/
+.audit/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Streamlit / caches
+.streamlit/
+*.log
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/
 
 ### Caches Python / tests
 __pycache__/
