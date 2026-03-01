@@ -1395,9 +1395,9 @@ def toggle_theme(is_dark: bool | None):
     Input("mannwhitney-topic-select", "value"),
 )
 def update_mannwhitney_topic_density(topic_id: int | None):
-    """Affiche la densité des probabilités d'un topic (2024 vs 2025)."""
+    """Affiche la densité des probabilités d'un topic (2024 vs 2025) sous forme de courbes."""
     dist_2024 = DATA.get("topic_dists_2024")
-    dist_2025 = DATA.get("topic_dists_2025")
+    dist_2025 = DATA.get("topic_distse _2025")
     mw_df = DATA.get("mannwhitney")
 
     fig = go.Figure()
@@ -1419,42 +1419,55 @@ def update_mannwhitney_topic_density(topic_id: int | None):
 
     x24 = dist_2024[:, topic_id]
     x25 = dist_2025[:, topic_id]
+    # Courbes de densité estimées à partir d'histogrammes normalisés
+    bins = np.linspace(0.0, 1.0, 31)
+    centers = 0.5 * (bins[:-1] + bins[1:])
+    try:
+        dens24, _ = np.histogram(x24, bins=bins, density=True)
+        dens25, _ = np.histogram(x25, bins=bins, density=True)
+    except Exception:
+        dens24 = np.zeros(len(centers))
+        dens25 = np.zeros(len(centers))
 
     fig.add_trace(
-        go.Histogram(
-            x=x24,
+        go.Scatter(
+            x=centers,
+            y=dens24,
+            mode="lines",
             name="2024",
-            opacity=0.55,
-            marker_color="#60a5fa",
-            histnorm="probability density",
-            nbinsx=30,
+            line=dict(color="#60a5fa", width=3),
         )
     )
     fig.add_trace(
-        go.Histogram(
-            x=x25,
+        go.Scatter(
+            x=centers,
+            y=dens25,
+            mode="lines",
             name="2025",
-            opacity=0.55,
-            marker_color="#f97316",
-            histnorm="probability density",
-            nbinsx=30,
+            line=dict(color="#f97316", width=3),
         )
     )
 
     title = f"Topic {topic_id} — densité des probabilités (2024 vs 2025)"
+    mean24 = float(np.nanmean(x24))
+    mean25 = float(np.nanmean(x25))
+    delta = mean25 - mean24
+    effect_size = _cohens_d(x24, x25)
     if isinstance(mw_df, pd.DataFrame) and not mw_df.empty and "topic" in mw_df.columns:
         row = mw_df[mw_df["topic"] == topic_id]
         if not row.empty and "p_value" in row.columns:
             p = float(row.iloc[0]["p_value"])
             sig = bool(row.iloc[0].get("significatif", False))
-            title += f" | p = {p:.4f} ({'significatif' if sig else 'non significatif'})"
+            title += (
+                f" | p = {p:.4f} ({'significatif' if sig else 'non significatif'})"
+                f" · moy_2024 = {mean24:.3f}, moy_2025 = {mean25:.3f}, Δ = {delta:.3f}, d = {effect_size:.2f}"
+            )
 
     fig.update_layout(
-        barmode="overlay",
         template=pio.templates.default,
         title=title,
         xaxis_title="Probabilité du topic",
-        yaxis_title="Densité",
+        yaxis_title="Densité (estimation)",
         legend_title_text="Année",
         height=420,
     )
@@ -2814,118 +2827,283 @@ def create_stats_descriptives():
 
 
 def create_stats_tests():
-    """Tests statistiques comparatifs."""
-    budget_2024 = DATA['budget_2024']
-    budget_2025 = DATA['budget_2025']
+    """Tests de significativité sur l'évolution des thèmes et des clusters."""
 
-    mean_diff_ae = budget_2025['ae'].mean() - budget_2024['ae'].mean()
-    mean_diff_cp = budget_2025['cp'].mean() - budget_2024['cp'].mean()
+    cards: list = []
 
-    chi2_df = DATA.get('chi2')
-    mw_df = DATA.get('mannwhitney')
-
-    chi2_section = html.Div()
-    if chi2_df is not None and not chi2_df.empty:
-        row = chi2_df.iloc[0]
-        chi2_section = dbc.Card([
-            dbc.CardHeader(html.H5("Test du Chi² sur la distribution des topics/piliers")),
-            dbc.CardBody([
-                html.P(f"Statistique χ² : {row.get('chi2', float('nan')):.2f}"),
-                html.P(f"p-value : {row.get('p_value', float('nan')):.4f}"),
-                html.P(f"Degrés de liberté : {int(row.get('dof', 0))}"),
-                html.Hr(),
-                html.P(
-                    "Résultat : "
-                    + (
-                        "différence significative entre 2024 et 2025 (au seuil 5%)."
-                        if bool(row.get('significatif', False))
-                        else "aucune différence significative détectée au seuil 5%."
-                    ),
-                    className="text-muted"
-                ),
-            ])
-        ], className="mb-4 kpi-card shadow-sm")
-
-    mw_section = html.Div()
+    # ── 1. Glissement thématique (probabilités de topics LDA) ──────────────
     topic_dists_2024 = DATA.get("topic_dists_2024")
     topic_dists_2025 = DATA.get("topic_dists_2025")
-    if mw_df is not None and not mw_df.empty:
-        topic_options = []
+    mw_df = DATA.get("mannwhitney")
+
+    if isinstance(topic_dists_2024, np.ndarray) and isinstance(topic_dists_2025, np.ndarray):
+        n_topics = int(topic_dists_2024.shape[1])
+        means_2024 = topic_dists_2024.mean(axis=0)
+        means_2025 = topic_dists_2025.mean(axis=0)
+
+        rows = []
+        for t in range(n_topics):
+            m24 = float(means_2024[t])
+            m25 = float(means_2025[t])
+            delta = m25 - m24
+            p_val = float("nan")
+            sig = None
+            d_eff = float("nan")
+
+            if isinstance(mw_df, pd.DataFrame) and not mw_df.empty and "topic" in mw_df.columns:
+                row_mw = mw_df[mw_df["topic"] == t]
+                if not row_mw.empty:
+                    p_val = float(row_mw.iloc[0].get("p_value", float("nan")))
+                    sig = bool(row_mw.iloc[0].get("significatif", False))
+
+            # Taille d'effet (Cohen d) sur les distributions de probas
+            d_eff = _cohens_d(topic_dists_2024[:, t], topic_dists_2025[:, t])
+
+            rows.append(
+                {
+                    "topic": t,
+                    "moy_2024": m24,
+                    "moy_2025": m25,
+                    "delta_moy": delta,
+                    "p_value": p_val,
+                    "significatif": sig,
+                    "cohen_d": d_eff,
+                }
+            )
+
+        topics_summary = pd.DataFrame(rows).round(4)
+
+        cards.append(
+            dbc.Card(
+                [
+                    dbc.CardHeader(html.H5("Glissement thématique (probabilités de topics LDA)")),
+                    dbc.CardBody(
+                        [
+                            html.P(
+                                "Pour chaque topic, on compare la probabilité moyenne par article "
+                                "entre 2024 et 2025 (Mann-Whitney + taille d'effet).",
+                                className="text-muted",
+                            ),
+                            dbc.Table.from_dataframe(
+                                topics_summary,
+                                striped=True,
+                                bordered=True,
+                                hover=True,
+                            ),
+                        ]
+                    ),
+                ],
+                className="mb-4 kpi-card shadow-sm",
+            )
+        )
+
+    # ── 2. Répartition des topics dominants (Chi²) ─────────────────────────
+    art_2024 = DATA.get("articles_topics_2024")
+    art_2025 = DATA.get("articles_topics_2025")
+    chi2_topics_card = html.Div()
+    try:
+        if isinstance(art_2024, pd.DataFrame) and isinstance(art_2025, pd.DataFrame):
+            if "dominant_topic" in art_2024.columns and "dominant_topic" in art_2025.columns:
+                from scipy.stats import chi2_contingency
+
+                s24 = art_2024["dominant_topic"].astype(str)
+                s25 = art_2025["dominant_topic"].astype(str)
+
+                ct = pd.crosstab(
+                    pd.Series(["2024"] * len(s24) + ["2025"] * len(s25), name="annee"),
+                    pd.concat([s24, s25], ignore_index=True).rename("topic"),
+                )
+
+                chi2, pval, dof, expected = chi2_contingency(ct)
+                n = ct.values.sum()
+                k = min(ct.shape)
+                cramer_v = float(np.sqrt(chi2 / (n * (k - 1)))) if k > 1 and n > 0 else float("nan")
+
+                dist_df = (
+                    ct.div(ct.sum(axis=1), axis=0)
+                    .reset_index()
+                    .melt(id_vars="annee", var_name="topic", value_name="proportion")
+                )
+                pivot = dist_df.pivot(index="topic", columns="annee", values="proportion").fillna(0.0)
+                pivot["delta_2025_2024"] = pivot.get("2025", 0.0) - pivot.get("2024", 0.0)
+                pivot = pivot.reset_index().rename(columns={"2024": "pct_2024", "2025": "pct_2025"})
+
+                chi2_topics_card = dbc.Card(
+                    [
+                        dbc.CardHeader(html.H5("Répartition des topics dominants (Chi²)")),
+                        dbc.CardBody(
+                            [
+                                html.P(
+                                    "Test du Chi² sur la distribution des topics dominants par article "
+                                    "entre 2024 et 2025 (plus Cramér V comme mesure d'intensité).",
+                                    className="text-muted",
+                                ),
+                                html.Ul(
+                                    [
+                                        html.Li(f"χ² = {chi2:.2f}, ddl = {dof}, p = {pval:.4f}"),
+                                        html.Li(f"Cramér V = {cramer_v:.3f}"),
+                                    ]
+                                ),
+                                html.Hr(),
+                                html.H6("Part des articles par topic"),
+                                dbc.Table.from_dataframe(
+                                    pivot.round(3),
+                                    striped=True,
+                                    bordered=True,
+                                    hover=True,
+                                ),
+                            ]
+                        ),
+                    ],
+                    className="mb-4 kpi-card shadow-sm",
+                )
+    except Exception:
+        chi2_topics_card = html.Div()
+
+    if isinstance(chi2_topics_card, dbc.Card):
+        cards.append(chi2_topics_card)
+
+    # ── 3. Structure des clusters (KMeans / HDBSCAN) ────────────────────────
+    cl_2024 = DATA.get("articles_clusters_2024")
+    cl_2025 = DATA.get("articles_clusters_2025")
+    cluster_rows = []
+
+    def _cluster_test(df24: pd.DataFrame, df25: pd.DataFrame, col: str, algo_label: str):
+        """Retourne un dict avec chi², p, ddl, Cramér V et nombre de clusters."""
+        from scipy.stats import chi2_contingency
+
+        s24 = df24[col]
+        s25 = df25[col]
+        if col == "cluster_hdbscan":
+            # Exclure le bruit (-1) pour HDBSCAN
+            s24 = s24[s24 != -1]
+            s25 = s25[s25 != -1]
+
+        s24 = s24.dropna().astype(int).astype(str)
+        s25 = s25.dropna().astype(int).astype(str)
+        if s24.empty or s25.empty:
+            return None
+
+        ct = pd.crosstab(
+            pd.Series(["2024"] * len(s24) + ["2025"] * len(s25), name="annee"),
+            pd.concat([s24, s25], ignore_index=True).rename("cluster"),
+        )
+
+        if ct.shape[0] < 2 or ct.shape[1] < 2:
+            return None
+
+        chi2, pval, dof, expected = chi2_contingency(ct)
+        n = ct.values.sum()
+        k = min(ct.shape)
+        cramer_v = float(np.sqrt(chi2 / (n * (k - 1)))) if k > 1 and n > 0 else float("nan")
+
+        return {
+            "algo": algo_label,
+            "n_clusters": int(ct.shape[1]),
+            "chi2": round(chi2, 3),
+            "p_value": round(pval, 4),
+            "dof": int(dof),
+            "cramer_v": round(cramer_v, 3),
+        }
+
+    if isinstance(cl_2024, pd.DataFrame) and isinstance(cl_2025, pd.DataFrame):
+        if "cluster_kmeans" in cl_2024.columns and "cluster_kmeans" in cl_2025.columns:
+            res_km = _cluster_test(cl_2024, cl_2025, "cluster_kmeans", "K-Means")
+            if res_km is not None:
+                cluster_rows.append(res_km)
+
+        if "cluster_hdbscan" in cl_2024.columns and "cluster_hdbscan" in cl_2025.columns:
+            res_hdb = _cluster_test(cl_2024, cl_2025, "cluster_hdbscan", "HDBSCAN (hors bruit)")
+            if res_hdb is not None:
+                cluster_rows.append(res_hdb)
+
+    if cluster_rows:
+        clusters_df = pd.DataFrame(cluster_rows)
+        cards.append(
+            dbc.Card(
+                [
+                    dbc.CardHeader(html.H5("Structure des clusters (K-Means / HDBSCAN)")),
+                    dbc.CardBody(
+                        [
+                            html.P(
+                                "Test du Chi² sur la distribution des clusters par année, "
+                                "avec Cramér V comme indicateur de stabilité ou de glissement « structurel ».",
+                                className="text-muted",
+                            ),
+                            dbc.Table.from_dataframe(
+                                clusters_df,
+                                striped=True,
+                                bordered=True,
+                                hover=True,
+                            ),
+                        ]
+                    ),
+                ],
+                className="mb-4 kpi-card shadow-sm",
+            )
+        )
+
+    # ── 4. Visualisation détaillée des densités de topics (déjà couplée à Mann-Whitney) ─
+    topic_options = []
+    if isinstance(topic_dists_2024, np.ndarray):
         try:
-            if isinstance(topic_dists_2024, np.ndarray):
-                n_topics = int(topic_dists_2024.shape[1])
-                topic_options = [
-                    {"label": f"Topic {t}", "value": t} for t in range(n_topics)
-                ]
+            n_topics = int(topic_dists_2024.shape[1])
+            topic_options = [{"label": f"Topic {t}", "value": t} for t in range(n_topics)]
         except Exception:
             topic_options = []
 
-        mw_section = html.Div([
-            html.H5(
-                "Test de Mann-Whitney sur les distributions de probabilités de topics",
-                className="mb-2",
-            ),
-            dbc.Alert(
-                [
-                    html.P(
-                        "H₀ : pour chaque topic, la distribution des probabilités est la même en 2024 et 2025.",
-                        className="mb-1",
-                    ),
-                    html.P(
-                        "Les p-values inférieures à 0.05 indiquent un changement significatif de prévalence du topic.",
-                        className="mb-0",
-                    ),
-                ],
-                color="secondary",
-                className="mb-3",
-            ),
-            dbc.Table.from_dataframe(
-                mw_df.round(4),
-                striped=True,
-                bordered=True,
-                hover=True,
-            ),
-            html.Hr(),
-            html.H5(
-                "Densité des probabilités par topic (2024 vs 2025)",
-                className="mb-3",
-            ),
-            dbc.Row([
-                dbc.Col([
-                    html.Label("Topic analysé :"),
-                    dcc.Dropdown(
-                        id="mannwhitney-topic-select",
-                        options=topic_options,
-                        value=topic_options[0]["value"] if topic_options else None,
-                        clearable=False,
-                    ),
-                ], md=3),
-                dbc.Col([
-                    dcc.Graph(id="mannwhitney-topic-density"),
-                ], md=9),
-            ]) if topic_options else html.Div(),
-        ])
+    density_section = html.Div()
+    if topic_options:
+        density_section = html.Div(
+            [
+                html.H5(
+                    "Densité des probabilités par topic (courbes 2024 vs 2025)",
+                    className="mb-3",
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            [
+                                html.Label("Topic analysé :"),
+                                dcc.Dropdown(
+                                    id="mannwhitney-topic-select",
+                                    options=topic_options,
+                                    value=topic_options[0]["value"],
+                                    clearable=False,
+                                ),
+                            ],
+                            md=3,
+                        ),
+                        dbc.Col(
+                            [dcc.Graph(id="mannwhitney-topic-density")],
+                            md=9,
+                        ),
+                    ]
+                ),
+            ]
+        )
 
-    return html.Div([
-        html.H3("Tests Comparatifs 2024 vs 2025", className="mb-4"),
+    if isinstance(density_section, html.Div):
+        cards.append(density_section)
 
-        dbc.Card([
-            dbc.CardHeader(html.H5("Comparaison des Moyennes AE/CP")),
-            dbc.CardBody([
-                html.P(f"Différence moyenne AE: {mean_diff_ae/1e6:+.2f} M FCFA"),
-                html.P(f"Différence moyenne CP: {mean_diff_cp/1e6:+.2f} M FCFA"),
-                html.Hr(),
-                html.P(
-                    "Les montants moyens des lignes budgétaires augmentent entre 2024 et 2025, "
-                    "reflétant une hausse générale des enveloppes par programme.",
-                    className="text-muted"
-                )
-            ])
-        ], className="mb-4 kpi-card shadow-sm"),
+    # ── Assemblage de la page ───────────────────────────────────────────────
+    if not cards:
+        return html.Div(
+            [
+                html.H3("Tests Comparatifs 2024 vs 2025", className="mb-4"),
+                dbc.Alert(
+                    "Aucune donnée statistique disponible dans outputs/reports pour construire les tests.",
+                    color="warning",
+                ),
+            ]
+        )
 
-        chi2_section,
-        mw_section,
-    ])
+    return html.Div(
+        [
+            html.H3("Tests de significativité : thèmes et clusters", className="mb-4"),
+            *cards,
+        ]
+    )
 
 
 def create_stats_distributions():
