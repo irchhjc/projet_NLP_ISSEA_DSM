@@ -32,13 +32,16 @@ ZERO_SHOT_MODEL      = "MoritzLaurer/mDeBERTa-v3-base-mnli-xnli"
 # ─── Hyperparamètres embeddings ──────────────────────────────────────────────
 EMBEDDING_PARAMS = {
     "batch_size":  8,   # nombre d'articles à traiter simultanément
-    "max_length":  1000, # longueur maximale des séquences
+    # Longueur maximale des séquences pour le modèle d'embedding.
+    # Le modèle XLM-R utilisé supporte 514 positions, on reste donc à 512.
+    "max_length":  512,
 }
 
 # ─── Hyperparamètres Zero-Shot ────────────────────────────────────────────────
 ZERO_SHOT_PARAMS = {
     "batch_size":  8, # nombre d'article a traiter simultanément
-    "max_length":  1000, # longueur maximale des séquences
+    # Même contrainte de longueur que pour les embeddings (séquences tronquées à 512 tokens).
+    "max_length":  512,
     "multi_label": True, # classification multi-label (un article peut appartenir à plusieurs piliers)
 }
 

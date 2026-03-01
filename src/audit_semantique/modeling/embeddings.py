@@ -34,7 +34,7 @@ class SentenceTransformerEncoder:
     ) -> None:
         self.model_name = model_name
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
-        logger.info(f"🖥️  Sentence-Transformers device : {self.device}")
+        logger.info(f"Sentence-Transformers device : {self.device}")
         self._model: Optional[SentenceTransformer] = None
 
     def _load(self) -> None:
@@ -80,7 +80,7 @@ class SentenceTransformerEncoder:
         """Sauvegarde les embeddings en .npy dans ``outputs/models/``."""
         path = MODELS_DIR / f"embeddings_{name}.npy"
         np.save(path, embeddings)
-        logger.info(f"💾 Embeddings sauvegardés → {path}")
+        logger.info(f"Embeddings sauvegardés → {path}")
         return path
 
     def load_embeddings(self, name: str) -> np.ndarray:
@@ -98,7 +98,7 @@ class SentenceTransformerEncoder:
     def save(embeddings: np.ndarray, name: str) -> Path:
         path = MODELS_DIR / f"embeddings_{name}.npy"
         np.save(path, embeddings)
-        logger.info(f"💾 Embeddings (ST) sauvegardés → {path}")
+        logger.info(f"Embeddings (ST) sauvegardés → {path}")
         return path
 
     @staticmethod
