@@ -2,7 +2,7 @@
 
 Ce package fournit des outils pour l'audit sémantique des lois de finances du Cameroun à l'aide de méthodes NLP et de modèles Transformers.
 
-## Installation
+## Installation du packagess
 
 ```bash
 pip install .

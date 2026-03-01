@@ -236,7 +236,8 @@ def load_all_data():
             meta_2024 = _safe_article_meta(2024)
             meta_2025 = _safe_article_meta(2025)
 
-            # Projection UMAP 2D
+            # Projection UMAP 2D (chargée si disponible, sinon générée à la volée
+            # à partir des embeddings et sauvegardée dans outputs/models).
             df_umap = None
             try:
                 combined = np.vstack([emb_2024, emb_2025])
@@ -245,6 +246,7 @@ def load_all_data():
                 umap_coords_2024_file = MODELS_DIR / "umap_2024.npy"
                 umap_coords_2025_file = MODELS_DIR / "umap_2025.npy"
 
+                coords = None
                 if umap_coords_file.exists():
                     coords = np.load(umap_coords_file)
                 elif umap_coords_2024_file.exists() and umap_coords_2025_file.exists():
@@ -252,16 +254,33 @@ def load_all_data():
                     coords_25 = np.load(umap_coords_2025_file)
                     coords = np.vstack([coords_24, coords_25])
                 else:
-                    raise FileNotFoundError(
-                        "Projection UMAP non trouvée. Ajoutez `outputs/models/umap_coords.npy` "
-                        "ou `umap_2024.npy`+`umap_2025.npy` pour activer la visualisation UMAP."
-                    )
+                    # Aucune projection UMAP trouvée : la générer automatiquement
+                    try:
+                        import umap as umap_lib  # type: ignore[import]
+                    except ImportError:
+                        raise ImportError(
+                            "Le package 'umap-learn' n'est pas installé. "
+                            "Installez-le pour activer la visualisation UMAP."
+                        )
+
+                    reducer = umap_lib.UMAP(**UMAP_PARAMS)
+                    coords = reducer.fit_transform(combined)
+
+                    MODELS_DIR.mkdir(parents=True, exist_ok=True)
+                    np.save(umap_coords_file, coords)
+
+                    n24_tmp = len(emb_2024)
+                    coords_24 = coords[:n24_tmp]
+                    coords_25 = coords[n24_tmp:]
+                    np.save(umap_coords_2024_file, coords_24)
+                    np.save(umap_coords_2025_file, coords_25)
 
                 n24 = len(emb_2024)
                 n25 = len(emb_2025)
-                if coords.shape[0] != (n24 + n25) or coords.shape[1] < 2:
+                if coords is None or coords.shape[0] != (n24 + n25) or coords.shape[1] < 2:
                     raise ValueError(
-                        f"Projection UMAP incohérente: coords={coords.shape} vs n_total={n24+n25}"
+                        f"Projection UMAP incohérente: coords={None if coords is None else coords.shape} "
+                        f"vs n_total={n24+n25}"
                     )
                 df_umap = pd.DataFrame(
                     {
