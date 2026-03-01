@@ -423,9 +423,47 @@ def extract_topic_words(topic_id, df_topics):
 
 
 def get_cluster_texts(df, cluster_id):
-    """Récupère tous les textes d'un cluster donné."""
-    cluster_articles = df[df['cluster_kmeans'] == cluster_id]
-    return ' '.join(cluster_articles['content'].fillna('').astype(str).tolist())
+    """Récupère un texte agrégé nettoyé pour un cluster donné.
+
+    Priorité :
+    1) Colonnes déjà nettoyées (cleaned_title / cleaned_content) produites par le pipeline.
+    2) À défaut, nettoyage à la volée de la colonne `content` avec TextPreprocessor.
+    """
+    cluster_articles = df[df["cluster_kmeans"] == cluster_id]
+    if cluster_articles.empty:
+        return ""
+
+    texts: list[str] = []
+
+    # 1) Utiliser les colonnes nettoyées si présentes (aligné avec les embeddings)
+    has_clean_title = "cleaned_title" in cluster_articles.columns
+    has_clean_content = "cleaned_content" in cluster_articles.columns
+    if has_clean_title or has_clean_content:
+        for _, row in cluster_articles.iterrows():
+            parts: list[str] = []
+            if has_clean_title:
+                parts.append(str(row.get("cleaned_title", "")))
+            if has_clean_content:
+                parts.append(str(row.get("cleaned_content", "")))
+            txt = " ".join(p for p in parts if p).strip()
+            if txt:
+                texts.append(txt)
+
+        if texts:
+            return " ".join(texts)
+
+    # 2) Fallback : nettoyer `content` à la volée si disponible
+    if "content" in cluster_articles.columns:
+        prep = TextPreprocessor(lower=True, rm_accents=True)
+        cleaned_series = (
+            cluster_articles["content"]
+            .fillna("")
+            .astype(str)
+            .apply(prep.preprocess)
+        )
+        return " ".join(cleaned_series.tolist())
+
+    return ""
 
 
 # ══════════════════════════════════════════════════════════════════════════════
