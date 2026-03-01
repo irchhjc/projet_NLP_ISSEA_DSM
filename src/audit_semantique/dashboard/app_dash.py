@@ -1327,6 +1327,77 @@ def toggle_theme(is_dark: bool | None):
 
 
 @app.callback(
+    Output("mannwhitney-topic-density", "figure"),
+    Input("mannwhitney-topic-select", "value"),
+)
+def update_mannwhitney_topic_density(topic_id: int | None):
+    """Affiche la densité des probabilités d'un topic (2024 vs 2025)."""
+    dist_2024 = DATA.get("topic_dists_2024")
+    dist_2025 = DATA.get("topic_dists_2025")
+    mw_df = DATA.get("mannwhitney")
+
+    fig = go.Figure()
+    if (
+        topic_id is None
+        or not isinstance(dist_2024, np.ndarray)
+        or not isinstance(dist_2025, np.ndarray)
+        or dist_2024.ndim != 2
+        or dist_2025.ndim != 2
+        or topic_id < 0
+        or topic_id >= dist_2024.shape[1]
+        or dist_2025.shape[1] != dist_2024.shape[1]
+    ):
+        fig.update_layout(
+            title="Distribution des probabilités de topics non disponible",
+            template=pio.templates.default,
+        )
+        return fig
+
+    x24 = dist_2024[:, topic_id]
+    x25 = dist_2025[:, topic_id]
+
+    fig.add_trace(
+        go.Histogram(
+            x=x24,
+            name="2024",
+            opacity=0.55,
+            marker_color="#60a5fa",
+            histnorm="probability density",
+            nbinsx=30,
+        )
+    )
+    fig.add_trace(
+        go.Histogram(
+            x=x25,
+            name="2025",
+            opacity=0.55,
+            marker_color="#f97316",
+            histnorm="probability density",
+            nbinsx=30,
+        )
+    )
+
+    title = f"Topic {topic_id} — densité des probabilités (2024 vs 2025)"
+    if isinstance(mw_df, pd.DataFrame) and not mw_df.empty and "topic" in mw_df.columns:
+        row = mw_df[mw_df["topic"] == topic_id]
+        if not row.empty and "p_value" in row.columns:
+            p = float(row.iloc[0]["p_value"])
+            sig = bool(row.iloc[0].get("significatif", False))
+            title += f" | p = {p:.4f} ({'significatif' if sig else 'non significatif'})"
+
+    fig.update_layout(
+        barmode="overlay",
+        template=pio.templates.default,
+        title=title,
+        xaxis_title="Probabilité du topic",
+        yaxis_title="Densité",
+        legend_title_text="Année",
+        height=420,
+    )
+    return fig
+
+
+@app.callback(
     Output('topics-content', 'children'),
     Input('topics-tabs', 'active_tab')
 )
@@ -2712,13 +2783,63 @@ def create_stats_tests():
         ], className="mb-4 kpi-card shadow-sm")
 
     mw_section = html.Div()
+    topic_dists_2024 = DATA.get("topic_dists_2024")
+    topic_dists_2025 = DATA.get("topic_dists_2025")
     if mw_df is not None and not mw_df.empty:
+        topic_options = []
+        try:
+            if isinstance(topic_dists_2024, np.ndarray):
+                n_topics = int(topic_dists_2024.shape[1])
+                topic_options = [
+                    {"label": f"Topic {t}", "value": t} for t in range(n_topics)
+                ]
+        except Exception:
+            topic_options = []
+
         mw_section = html.Div([
-            html.H5("Test de Mann-Whitney sur les distributions de probabilités de topics", className="mb-3"),
+            html.H5(
+                "Test de Mann-Whitney sur les distributions de probabilités de topics",
+                className="mb-2",
+            ),
+            dbc.Alert(
+                [
+                    html.P(
+                        "H₀ : pour chaque topic, la distribution des probabilités est la même en 2024 et 2025.",
+                        className="mb-1",
+                    ),
+                    html.P(
+                        "Les p-values inférieures à 0.05 indiquent un changement significatif de prévalence du topic.",
+                        className="mb-0",
+                    ),
+                ],
+                color="secondary",
+                className="mb-3",
+            ),
             dbc.Table.from_dataframe(
                 mw_df.round(4),
-                striped=True, bordered=True, hover=True
-            )
+                striped=True,
+                bordered=True,
+                hover=True,
+            ),
+            html.Hr(),
+            html.H5(
+                "Densité des probabilités par topic (2024 vs 2025)",
+                className="mb-3",
+            ),
+            dbc.Row([
+                dbc.Col([
+                    html.Label("Topic analysé :"),
+                    dcc.Dropdown(
+                        id="mannwhitney-topic-select",
+                        options=topic_options,
+                        value=topic_options[0]["value"] if topic_options else None,
+                        clearable=False,
+                    ),
+                ], md=3),
+                dbc.Col([
+                    dcc.Graph(id="mannwhitney-topic-density"),
+                ], md=9),
+            ]) if topic_options else html.Div(),
         ])
 
     return html.Div([
