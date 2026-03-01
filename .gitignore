@@ -1,5 +1,5 @@
 # Environnement virtuel
-.venv/
+.audit/
 
 # Cache
 __pycache__/
@@ -14,6 +14,9 @@ logs/
 # Outputs générés
 outputs/
 data/processed/
+build/
+dist/
+*.log
 
 # Modèles lourds
 *.npy
@@ -23,6 +26,7 @@ data/processed/
 
 # Fichiers Excel générés
 *.xlsx
+*.txt
 
 # Fichiers images générés
 *.png
