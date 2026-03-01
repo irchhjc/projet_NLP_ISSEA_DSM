@@ -40,9 +40,9 @@ class SentenceTransformerEncoder:
     def _load(self) -> None:
         if self._model is not None:
             return
-        logger.info(f"📥 Chargement du modèle sentence-transformers {self.model_name}...")
+        logger.info(f"Chargement du modèle sentence-transformers {self.model_name}...")
         self._model = SentenceTransformer(self.model_name, device=self.device)
-        logger.info("✅ Modèle sentence-transformers prêt.")
+        logger.info("Modèle sentence-transformers prêt.")
 
     def encode(
         self,
@@ -58,7 +58,7 @@ class SentenceTransformerEncoder:
         self._load()
         assert self._model is not None
 
-        logger.info(f"🔄 Encodage (sentence-transformers) de {len(texts)} textes...")
+        logger.info(f"Encodage (sentence-transformers) de {len(texts)} textes...")
 
         # Limite de longueur gérée au niveau du modèle
         self._model.max_seq_length = max_length
@@ -71,7 +71,7 @@ class SentenceTransformerEncoder:
             normalize_embeddings=True,
         )
 
-        logger.info(f"✅ Encodage sentence-transformers terminé : shape {embeddings.shape}")
+        logger.info(f"Encodage sentence-transformers terminé : shape {embeddings.shape}")
         return embeddings
 
     # ── Persistance ──────────────────────────────────────────────────────────
@@ -89,7 +89,7 @@ class SentenceTransformerEncoder:
         if not path.exists():
             raise FileNotFoundError(f"Embeddings introuvables : {path}")
         emb = np.load(path)
-        logger.info(f"📂 Embeddings chargés depuis {path} : shape {emb.shape}")
+        logger.info(f"Embeddings chargés depuis {path} : shape {emb.shape}")
         return emb
 
     # Méthodes de persistance réutilisables pour SentenceTransformerEncoder
@@ -107,5 +107,5 @@ class SentenceTransformerEncoder:
         if not path.exists():
             raise FileNotFoundError(f"Embeddings ST introuvables : {path}")
         emb = np.load(path)
-        logger.info(f"📂 Embeddings (ST) chargés depuis {path} : shape {emb.shape}")
+        logger.info(f"Embeddings (ST) chargés depuis {path} : shape {emb.shape}")
         return emb

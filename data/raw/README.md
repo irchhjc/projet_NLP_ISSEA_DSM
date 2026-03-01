@@ -1,4 +1,4 @@
-# 📂 Données — Lois de Finances Cameroun
+# Données — Lois de Finances Cameroun
 
 Placez ici vos fichiers JSON extraits des PDF du MINFI.
 

@@ -46,7 +46,7 @@ class StatisticalAnalyzer:
         n_topics = dist_2024.shape[1]
         rows = []
 
-        logger.info("📊 Tests de Mann-Whitney U par topic...")
+        logger.info("Tests de Mann-Whitney U par topic...")
         logger.info(
             "  H0 : les distributions de probabilités sont identiques entre 2024 et 2025"
         )
@@ -70,7 +70,7 @@ class StatisticalAnalyzer:
             )
             logger.info(
                 f"  Topic {t}: U={stat:.2f}, p={pval:.4f} "
-                f"→ {'✅ Significatif' if sig else '❌ Non significatif'}"
+                f"→ {'Significatif' if sig else 'Non significatif'}"
             )
 
         return pd.DataFrame(rows)
@@ -91,7 +91,7 @@ class StatisticalAnalyzer:
         -------
         dict avec : chi2, p_value, dof, contingency_table, significatif.
         """
-        logger.info("📊 Test du Chi² sur les piliers SND30...")
+        logger.info("Test du Chi² sur les piliers SND30...")
 
         ct = pd.crosstab(
             pd.Series(["2024"] * len(df_2024) + ["2025"] * len(df_2025), name="annee"),
@@ -103,7 +103,7 @@ class StatisticalAnalyzer:
 
         logger.info(
             f"  Chi²={chi2:.4f}, ddl={dof}, p={pval:.4f} "
-            f"→ {'✅ Significatif' if sig else '❌ Non significatif'}"
+            f"→ {'Significatif' if sig else 'Non significatif'}"
         )
 
         return {
@@ -141,7 +141,7 @@ class StatisticalAnalyzer:
         rho, pval = spearmanr(freq_thematiques, dotations_budgetaires)
         sig = pval < alpha
 
-        logger.info(f"📊 Corrélation de Spearman : ρ={rho:.4f}, p={pval:.4f}")
+        logger.info(f"Corrélation de Spearman : ρ={rho:.4f}, p={pval:.4f}")
 
         df = pd.DataFrame(
             {

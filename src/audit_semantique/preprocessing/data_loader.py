@@ -113,7 +113,7 @@ def generate_and_save_embeddings(
 
     # Vérifier si les embeddings existent déjà
     if embedding_path.exists() and not force:
-        logger.info(f"📂 Embeddings déjà existants pour {annee} : {embedding_path}")
+        logger.info(f"Embeddings déjà existants pour {annee} : {embedding_path}")
         embeddings = np.load(embedding_path)
         logger.info(f"  → Shape : {embeddings.shape}")
         return embeddings
@@ -168,7 +168,7 @@ def load_saved_embeddings(annee: int) -> np.ndarray:
         )
     
     embeddings = np.load(embedding_path)
-    logger.info(f"📂 Embeddings chargés pour {annee} : shape {embeddings.shape}")
+    logger.info(f"Embeddings chargés pour {annee} : shape {embeddings.shape}")
     return embeddings
 
 
@@ -197,17 +197,17 @@ def generate_all_embeddings(force: bool = False) -> tuple[np.ndarray, np.ndarray
     
     # Générer les embeddings pour chaque année
     logger.info("\n" + "="*60)
-    logger.info("📊 Génération des embeddings pour 2024")
+    logger.info("Génération des embeddings pour 2024")
     logger.info("="*60)
     embeddings_2024 = generate_and_save_embeddings(loi_2024, 2024, encoder, force)
     
     logger.info("\n" + "="*60)
-    logger.info("📊 Génération des embeddings pour 2025")
+    logger.info("Génération des embeddings pour 2025")
     logger.info("="*60)
     embeddings_2025 = generate_and_save_embeddings(loi_2025, 2025, encoder, force)
     
     logger.info("\n" + "="*60)
-    logger.info("✅ Génération des embeddings terminée !")
+    logger.info("Génération des embeddings terminée !")
     logger.info(f"  • 2024 : {embeddings_2024.shape}")
     logger.info(f"  • 2025 : {embeddings_2025.shape}")
     logger.info("="*60)

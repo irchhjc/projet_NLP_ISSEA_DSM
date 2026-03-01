@@ -59,11 +59,11 @@ def _safe_to_excel(df: pd.DataFrame, path: Path, **kwargs) -> None:
     path = Path(path)
     lock_file = path.parent / f"~${path.name}"
 
-    # Supprimer le fichier verrou résiduel si Excel est fermé mais a laissé le ~$
+    # Supprimer le fichier verrou résiduel si Excel est fermé mais a laissé le ~$ 
     if lock_file.exists():
         try:
             lock_file.unlink()
-            logger.debug(f"🗑️  Fichier verrou supprimé : {lock_file.name}")
+            logger.debug(f"Fichier verrou supprimé : {lock_file.name}")
         except PermissionError:
             pass  # Excel a vraiment le fichier ouvert
 
@@ -75,12 +75,12 @@ def _safe_to_excel(df: pd.DataFrame, path: Path, **kwargs) -> None:
         try:
             df.to_excel(path, **kwargs)
             if attempt > 1:
-                logger.info(f"  ✅ Sauvegardé après {attempt} tentatives : {path.name}")
+                logger.info(f"Sauvegardé après {attempt} tentatives : {path.name}")
             return
         except PermissionError:
             if attempt < retries:
                 logger.warning(
-                    f"  ⚠️  {path.name} est ouvert dans Excel "
+                    f"{path.name} est ouvert dans Excel "
                     f"(tentative {attempt}/{retries}) — attente 3 s…"
                 )
                 time.sleep(3)
@@ -92,12 +92,12 @@ def _safe_to_excel(df: pd.DataFrame, path: Path, **kwargs) -> None:
                 try:
                     df.to_excel(alt, **kwargs)
                     logger.warning(
-                        f"  ⚠️  Impossible d'écrire {path.name} (fichier ouvert dans Excel).\n"
+                        f"Impossible d'écrire {path.name} (fichier ouvert dans Excel).\n"
                         f"       Fichier sauvegardé sous : {alt.name}\n"
                         f"       → Fermez Excel puis relancez le pipeline pour écraser l'original."
                     )
                 except Exception as e2:
-                    logger.error(f"  ❌ Échec de la sauvegarde de secours : {e2}")
+                    logger.error(f"Échec de la sauvegarde de secours : {e2}")
 
 
 def print_header(text: str):
@@ -110,7 +110,7 @@ def print_header(text: str):
 def main():
     """Pipeline principal avec barre de progression."""
     
-    print_header("🚀 PIPELINE AUDIT SÉMANTIQUE - LOI DE FINANCES CAMEROUN")
+    print_header("PIPELINE AUDIT SÉMANTIQUE - LOI DE FINANCES CAMEROUN")
     
     # Définir les étapes du pipeline
     steps = [
@@ -130,12 +130,12 @@ def main():
         # ═════════════════════════════════════════════════════════════════
         # ÉTAPE 1 : CHARGEMENT DES DONNÉES
         # ═════════════════════════════════════════════════════════════════
-        pbar.set_description("📂 Chargement des données")
-        logger.info("\n📂 ÉTAPE 1 - Chargement des données")
+        pbar.set_description("Chargement des données")
+        logger.info("\nÉTAPE 1 - Chargement des données")
         
         loi_2024, loi_2025 = load_all()
-        logger.info(f"  📄 2024 : {len(loi_2024)} articles")
-        logger.info(f"  📄 2025 : {len(loi_2025)} articles")
+        logger.info(f"2024 : {len(loi_2024)} articles")
+        logger.info(f"2025 : {len(loi_2025)} articles")
         
         pbar.update(1)
         time.sleep(0.5)
@@ -143,8 +143,8 @@ def main():
         # ═════════════════════════════════════════════════════════════════
         # ÉTAPE 2 : PRÉTRAITEMENT
         # ═════════════════════════════════════════════════════════════════
-        pbar.set_description("🧹 Prétraitement des textes")
-        logger.info("\n🧹 ÉTAPE 2 - Prétraitement des textes")
+        pbar.set_description("Prétraitement des textes")
+        logger.info("\nÉTAPE 2 - Prétraitement des textes")
         
         prep = TextPreprocessor(lower=True, rm_accents=True)
         # Nettoyage du contenu
@@ -161,8 +161,8 @@ def main():
         # ═════════════════════════════════════════════════════════════════
         # ÉTAPE 3 : GÉNÉRATION DES EMBEDDINGS
         # ═════════════════════════════════════════════════════════════════
-        pbar.set_description("🤖 Génération des embeddings")
-        logger.info("\n🤖 ÉTAPE 3 - Génération des embeddings (sentence-transformers)")
+        pbar.set_description("Génération des embeddings")
+        logger.info("\nÉTAPE 3 - Génération des embeddings (sentence-transformers)")
 
         encoder = SentenceTransformerEncoder()
 
@@ -171,7 +171,7 @@ def main():
         emb_file_2025 = MODELS_DIR / "embeddings_2025.npy"
 
         logger.info(
-            "  🔄 Calcul des embeddings sur titre + contenu nettoyés (les fichiers existants seront écrasés)..."
+            "Calcul des embeddings sur titre + contenu nettoyés (les fichiers existants seront écrasés)..."
         )
         texts_2024 = (
             loi_2024["cleaned_title"].fillna("")
@@ -191,15 +191,15 @@ def main():
         np.save(emb_file_2024, emb_2024)
         np.save(emb_file_2025, emb_2025)
         
-        logger.info(f"  ✅ Embeddings : 2024 {emb_2024.shape}, 2025 {emb_2025.shape}")
+        logger.info(f"Embeddings : 2024 {emb_2024.shape}, 2025 {emb_2025.shape}")
         pbar.update(1)
         time.sleep(0.5)
         
         # ═════════════════════════════════════════════════════════════════
         # ÉTAPE 4 : VISUALISATION DES EMBEDDINGS
         # ═════════════════════════════════════════════════════════════════
-        pbar.set_description("📊 Visualisation des embeddings")
-        logger.info("\n📊 ÉTAPE 4 - Visualisation et analyse des similarités")
+        pbar.set_description("Visualisation des embeddings")
+        logger.info("\nÉTAPE 4 - Visualisation et analyse des similarités")
         
         # Audit sémantique : similarité cosinus + export
         auditeur = AuditeurSemantique(emb_2024, emb_2025, loi_2024, loi_2025)
@@ -235,15 +235,15 @@ def main():
             seuil=AUDIT_PARAMS["seuil_changement"],
         )
         
-        logger.info("  ✅ Visualisations et similarités générées")
+        logger.info("Visualisations et similarités générées")
         pbar.update(1)
         time.sleep(0.5)
         
         # ═════════════════════════════════════════════════════════════════
         # ÉTAPE 5 : TOPIC MODELING (LDA)
         # ═════════════════════════════════════════════════════════════════
-        pbar.set_description("📚 Topic Modeling (LDA)")
-        logger.info("\n📚 ÉTAPE 5 - Topic Modeling (LDA)")
+        pbar.set_description("Topic Modeling (LDA)")
+        logger.info("\nÉTAPE 5 - Topic Modeling (LDA)")
         
         lda_model = LDATopicModeler(
             num_topics=LDA_PARAMS["num_topics"],
@@ -251,12 +251,12 @@ def main():
         )
         
         # Tokeniser les textes pour LDA
-        logger.info("  🔄 Tokenisation des textes...")
+        logger.info("Tokenisation des textes...")
         tokens_2024 = [prep.tokenize_for_lda(t) for t in loi_2024["cleaned_content"].fillna("")]
         tokens_2025 = [prep.tokenize_for_lda(t) for t in loi_2025["cleaned_content"].fillna("")]
         
         # 2024
-        logger.info("  📊 Entraînement LDA 2024...")
+        logger.info("Entraînement LDA 2024...")
         lda_model.fit(tokens_2024)
         topics_2024 = lda_model.get_topics_dataframe()
         dist_2024 = lda_model.get_doc_topic_matrix()
@@ -267,7 +267,7 @@ def main():
         _safe_to_excel(loi_2024_topics, REPORTS_DIR / "articles_2024_avec_topics.xlsx", index=False)
 
         # 2025
-        logger.info("  📊 Entraînement LDA 2025...")
+        logger.info("Entraînement LDA 2025...")
         lda_model.fit(tokens_2025)
         topics_2025 = lda_model.get_topics_dataframe()
         dist_2025 = lda_model.get_doc_topic_matrix()
@@ -277,15 +277,15 @@ def main():
         _safe_to_excel(topics_2025, REPORTS_DIR / "lda_topics_2025.xlsx", index=False)
         _safe_to_excel(loi_2025_topics, REPORTS_DIR / "articles_2025_avec_topics.xlsx", index=False)
         
-        logger.info("  ✅ Topic Modeling terminé")
+        logger.info("Topic Modeling terminé")
         pbar.update(1)
         time.sleep(0.5)
         
         # ═════════════════════════════════════════════════════════════════
         # ÉTAPE 6 : CLUSTERING
         # ═════════════════════════════════════════════════════════════════
-        pbar.set_description("🎯 Clustering des documents")
-        logger.info("\n🎯 ÉTAPE 6 - Clustering des documents")
+        pbar.set_description("Clustering des documents")
+        logger.info("\nÉTAPE 6 - Clustering des documents")
         
         clusterer = DocumentClusterer(
             n_clusters=KMEANS_PARAMS["n_clusters"],
@@ -293,7 +293,7 @@ def main():
         )
         
         # 2024
-        logger.info("  📊 Clustering 2024...")
+        logger.info("Clustering 2024...")
         results_2024 = clusterer.fit(emb_2024)
         loi_2024_clusters = loi_2024.copy()
         loi_2024_clusters["cluster_kmeans"] = results_2024.kmeans_labels
@@ -301,22 +301,22 @@ def main():
         _safe_to_excel(loi_2024_clusters, REPORTS_DIR / "articles_2024_avec_clusters.xlsx", index=False)
 
         # 2025
-        logger.info("  📊 Clustering 2025...")
+        logger.info("Clustering 2025...")
         results_2025 = clusterer.fit(emb_2025)
         loi_2025_clusters = loi_2025.copy()
         loi_2025_clusters["cluster_kmeans"] = results_2025.kmeans_labels
         loi_2025_clusters["cluster_hdbscan"] = results_2025.hdbscan_labels
         _safe_to_excel(loi_2025_clusters, REPORTS_DIR / "articles_2025_avec_clusters.xlsx", index=False)
         
-        logger.info("  ✅ Clustering terminé")
+        logger.info("Clustering terminé")
         pbar.update(1)
         time.sleep(0.5)
         
         # ═════════════════════════════════════════════════════════════════
         # ÉTAPE 7 : CLASSIFICATION ZERO-SHOT (OBJECTIFS BUDGÉTAIRES UNIQUEMENT)
         # ═════════════════════════════════════════════════════════════════
-        pbar.set_description("🏷️ Classification objectifs budgétaires")
-        logger.info("\n🏷️ ÉTAPE 7 - Classification Zero-Shot (objectifs budgétaires)")
+        pbar.set_description("Classification objectifs budgétaires")
+        logger.info("\nÉTAPE 7 - Classification Zero-Shot (objectifs budgétaires)")
         
         # Classification Zero-Shot des OBJECTIFS BUDGÉTAIRES (ae_pb) par pilier SND30
         import json as _json
@@ -327,7 +327,7 @@ def main():
 
         for ae_path, annee in [(ae_2024_path, 2024), (ae_2025_path, 2025)]:
             if not ae_path.exists():
-                logger.warning(f"  ⚠️  {ae_path.name} introuvable — classification ignorée")
+                logger.warning(f"{ae_path.name} introuvable — classification ignorée")
                 continue
 
             ae_data = _json.load(open(ae_path, encoding="utf-8"))
@@ -342,29 +342,58 @@ def main():
                         entry = row.drop("objectifs").to_dict()
                         entry["objectif"] = str(obj)
                         rows.append(entry)
-                df_objectifs = pd.DataFrame(rows)
+                df_objectifs = pd.DataFrame(rows).reset_index(drop=True)
+                df_objectifs["id_objectif"] = df_objectifs.index.astype(int)
             else:
-                logger.warning(f"  ⚠️  Colonne 'objectifs' absente dans {ae_path.name}")
+                logger.warning(f"Colonne 'objectifs' absente dans {ae_path.name}")
                 continue
 
-            logger.info(f"  🔍 Classification Zero-Shot {annee} — {len(df_objectifs)} objectifs...")
-            df_classified = classifier.classify_dataframe(df_objectifs, text_col="objectif")
+            # Nettoyer les objectifs et programmes avant zero-shot et embeddings
+            logger.info("Nettoyage des objectifs/programmes avant classification + embeddings...")
+            df_objectifs["cleaned_objectif"] = prep.preprocess_series(
+                df_objectifs["objectif"].fillna("").astype(str)
+            )
+            if "programme" in df_objectifs.columns:
+                df_objectifs["cleaned_programme"] = prep.preprocess_series(
+                    df_objectifs["programme"].fillna("").astype(str)
+                )
+            else:
+                df_objectifs["cleaned_programme"] = ""
+
+            # Texte pour les embeddings des objectifs : programme + objectif nettoyés
+            df_objectifs["text_embedding_objectif"] = (
+                df_objectifs["cleaned_programme"].fillna("")
+                + " [SEP] "
+                + df_objectifs["cleaned_objectif"].fillna("")
+            ).str.strip()
+
+            texts_obj = df_objectifs["text_embedding_objectif"].tolist()
+            if texts_obj:
+                emb_objectifs = encoder.encode(texts_obj)
+                emb_obj_path = MODELS_DIR / f"embeddings_objectifs_{annee}.npy"
+                np.save(emb_obj_path, emb_objectifs)
+                logger.info(
+                    f"Embeddings objectifs {annee} générés : {emb_objectifs.shape} → {emb_obj_path.name}"
+                )
+
+            logger.info(f"  🔍 Classification Zero-Shot {annee} — {len(df_objectifs)} objectifs (texte nettoyé)...")
+            df_classified = classifier.classify_dataframe(df_objectifs, text_col="cleaned_objectif")
             _safe_to_excel(
                 df_classified,
                 REPORTS_DIR / f"objectifs_classifications_snd30_{annee}.xlsx",
                 index=False,
             )
-            logger.info(f"  ✅ objectifs_classifications_snd30_{annee}.xlsx exporté")
+            logger.info(f"objectifs_classifications_snd30_{annee}.xlsx exporté")
         
-        logger.info("  ✅ Classification des objectifs terminée")
+        logger.info("Classification des objectifs terminée")
         pbar.update(1)
         time.sleep(0.5)
         
         # ═════════════════════════════════════════════════════════════════
         # ÉTAPE 8 : TESTS STATISTIQUES
         # ═════════════════════════════════════════════════════════════════
-        pbar.set_description("📈 Tests statistiques")
-        logger.info("\n📈 ÉTAPE 8 - Tests statistiques")
+        pbar.set_description("Tests statistiques")
+        logger.info("\nÉTAPE 8 - Tests statistiques")
         
         analyzer = StatisticalAnalyzer()
 
@@ -384,15 +413,15 @@ def main():
         mw_results = analyzer.test_mannwhitney_topics(dist_2024, dist_2025)
         _safe_to_excel(mw_results, REPORTS_DIR / "test_mannwhitney.xlsx", index=False)
         
-        logger.info("  ✅ Tests statistiques terminés")
+        logger.info("Tests statistiques terminés")
         pbar.update(1)
         time.sleep(0.5)
         
         # ═════════════════════════════════════════════════════════════════
         # ÉTAPE 9 : GÉNÉRATION DES INDICATEURS DASHBOARD
         # ═════════════════════════════════════════════════════════════════
-        pbar.set_description("📊 Génération indicateurs dashboard")
-        logger.info("\n📊 ÉTAPE 9 - Génération des indicateurs pour le dashboard")
+        pbar.set_description("Génération indicateurs dashboard")
+        logger.info("\nÉTAPE 9 - Génération des indicateurs pour le dashboard")
         
         # Générer analyse_budgetaire.xlsx avec tous les onglets nécessaires au dashboard
         import json as _json
@@ -461,7 +490,7 @@ def main():
                     lock_file.unlink()
                 except PermissionError:
                     logger.warning(
-                        "  ⚠️  analyse_budgetaire.xlsx est ouvert dans Excel. "
+                        "analyse_budgetaire.xlsx est ouvert dans Excel. "
                         "Fermez-le puis relancez l'étape 9."
                     )
             try:
@@ -472,7 +501,7 @@ def main():
                     piliers_2025.to_excel(writer, sheet_name="Piliers_2025", index=False)
                     if not comparison.empty:
                         comparison.to_excel(writer, sheet_name="Comparaison_2024_2025")
-                logger.info("  ✅ analyse_budgetaire.xlsx généré avec tous les onglets")
+                logger.info("analyse_budgetaire.xlsx généré avec tous les onglets")
             except PermissionError:
                 from datetime import datetime
                 alt = budget_path.with_stem(f"analyse_budgetaire_{datetime.now().strftime('%H%M%S')}")
@@ -484,20 +513,20 @@ def main():
                     if not comparison.empty:
                         comparison.to_excel(writer, sheet_name="Comparaison_2024_2025")
                 logger.warning(
-                    f"  ⚠️  analyse_budgetaire.xlsx est verrouillé → sauvegardé sous {alt.name}\n"
+                    f"analyse_budgetaire.xlsx est verrouillé → sauvegardé sous {alt.name}\n"
                     "       Fermez Excel et relancez pour écraser l'original."
                 )
         else:
-            logger.warning("  ⚠️ Fichiers ae_pb2024.json / ae_pb2025.json introuvables")
+            logger.warning("Fichiers ae_pb2024.json / ae_pb2025.json introuvables")
 
-        logger.info("  ✅ Tous les indicateurs sont prêts")
+        logger.info("Tous les indicateurs sont prêts")
         pbar.update(1)
         time.sleep(0.5)
     
     # ═════════════════════════════════════════════════════════════════════
     # RÉSUMÉ FINAL
     # ═════════════════════════════════════════════════════════════════════
-    print_header("✅ PIPELINE TERMINÉ AVEC SUCCÈS")
+    print_header("PIPELINE TERMINÉ AVEC SUCCÈS")
     
     print("\n📁 Fichiers générés dans outputs/reports/ :")
     print(" analyse_budgetaire.xlsx")
@@ -508,7 +537,7 @@ def main():
     print(" embeddings_similarities.xlsx (agrégé pour le dashboard)")
     print(" chi2_piliers.xlsx, test_mannwhitney.xlsx")
     
-    print("\n🚀 Lancer le dashboard :")
+    print("\nLancer le dashboard :")
     print("  poetry run python scripts/run_dash.py")
     print()
 

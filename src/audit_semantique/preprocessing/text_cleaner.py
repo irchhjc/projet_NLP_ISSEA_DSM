@@ -6,6 +6,7 @@ import re
 import unicodedata
 from typing import Optional
 
+import pandas as pd
 from loguru import logger
 
 try:
@@ -123,7 +124,6 @@ class TextPreprocessor:
 
     def preprocess_series(self, series) -> "pd.Series":
         """Applique le préprocessing à une Series pandas."""
-        import pandas as pd
         logger.info(f"Préprocessing de {len(series)} textes...")
         cleaned = series.fillna("").apply(self.preprocess)
         n_empty = (cleaned == "").sum()

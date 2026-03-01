@@ -123,7 +123,7 @@ class DocumentClusterer:
             kmeans_centers = centers_2d,
             metrics        = metrics,
         )
-        logger.info("✅ Clustering terminé.")
+        logger.info("Clustering terminé.")
         return results
 
     @staticmethod
@@ -151,7 +151,7 @@ class DocumentClusterer:
         -------
         dict : {k: inertia}
         """
-        logger.info("📉 Calcul de la courbe du coude...")
+        logger.info("Calcul de la courbe du coude...")
         result = {}
         for k in k_range:
             km = KMeans(n_clusters=k, random_state=self.kmeans_seed, n_init=10)

@@ -56,18 +56,21 @@ Ce script effectue notamment :
 	- passage en minuscules, normalisation
 	- suppression des URLs, nombres, ponctuation
 	- stopwords français de spaCy + stopwords métiers personnalisés
-3. Construction du texte d'entrée pour les embeddings :
+3. Construction du texte d'entrée pour les embeddings des articles :
 	- `cleaned_title + " [SEP] " + cleaned_content` pour chaque article.
 4. Génération des embeddings avec sentence-transformers :
 	- modèle : `sentence-transformers/paraphrase-multilingual-mpnet-base-v2`
 	- paramètres contrôlés par `EMBEDDING_PARAMS` dans `config.py`
 	- les embeddings sont **recalculés à chaque exécution** et sauvegardés dans `outputs/models`.
-5. Topic modeling (LDA) et affectation d'un topic dominant par article.
-6. Clustering (K-Means, HDBSCAN) sur les embeddings.
-7. Classification zero-shot des objectifs budgétaires sur les piliers du SND30 :
+5. Génération des embeddings pour les objectifs budgétaires :
+	- texte d'entrée : `cleaned_programme + " [SEP] " + cleaned_objectif` (même prétraitement que les articles)
+	- fichiers produits : `embeddings_objectifs_2024.npy`, `embeddings_objectifs_2025.npy`.
+6. Topic modeling (LDA) et affectation d'un topic dominant par article.
+7. Clustering (K-Means, HDBSCAN) sur les embeddings d'articles.
+8. Classification zero-shot des objectifs budgétaires sur les piliers du SND30 :
 	- modèle : `MoritzLaurer/mDeBERTa-v3-base-mnli-xnli`
 	- paramètres contrôlés par `ZERO_SHOT_PARAMS`.
-8. Calcul d'indicateurs statistiques (tests, distributions) et génération des rapports Excel.
+9. Calcul d'indicateurs statistiques (tests, distributions) et génération des rapports Excel.
 
 Tous les hyperparamètres (embeddings, zero-shot, LDA, clustering, UMAP, audit) sont centralisés dans `config.py`.
 
@@ -81,6 +84,7 @@ Le dashboard Dash consomme les sorties du pipeline et offre plusieurs vues :
 - topics LDA par année et comparaison 2024/2025
 - clustering des articles (K-Means / HDBSCAN, métriques internes)
 - baromètre SND30 (répartition des objectifs, scores, budget AE/CP)
+- correspondances objectifs ↔ articles (top 3 objectifs similaires et top 2 articles de loi proches pour un objectif donné)
 - tests statistiques et analyses budgétaires
 
 Lancer le dashboard après avoir exécuté le pipeline :

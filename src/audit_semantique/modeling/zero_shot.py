@@ -56,7 +56,7 @@ class ZeroShotClassifier:
             model=self.model_name,
             device=self.device,
         )
-        logger.info("✅ Classifieur prêt.")
+        logger.info("Classifieur prêt.")
 
     # ── API publique ─────────────────────────────────────────────────────────
 
@@ -130,7 +130,7 @@ class ZeroShotClassifier:
             "score_", "", regex=False
         )
         df["score_pilier_dominant"] = df[score_cols].max(axis=1)
-        logger.info("✅ Classification SND30 terminée.")
+        logger.info("Classification SND30 terminée.")
         return df
 
     def export_excel(self, df: pd.DataFrame, path: str | None = None) -> str:
