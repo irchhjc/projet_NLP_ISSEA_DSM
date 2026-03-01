@@ -276,6 +276,11 @@ def main():
 
         _safe_to_excel(topics_2025, REPORTS_DIR / "lda_topics_2025.xlsx", index=False)
         _safe_to_excel(loi_2025_topics, REPORTS_DIR / "articles_2025_avec_topics.xlsx", index=False)
+
+        # Sauvegarder les matrices de distribution de topics pour le dashboard
+        MODELS_DIR.mkdir(parents=True, exist_ok=True)
+        np.save(MODELS_DIR / "topic_dists_2024.npy", dist_2024)
+        np.save(MODELS_DIR / "topic_dists_2025.npy", dist_2025)
         
         logger.info("Topic Modeling terminé")
         pbar.update(1)

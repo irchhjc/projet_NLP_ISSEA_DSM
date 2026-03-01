@@ -426,18 +426,17 @@ def extract_topic_words(topic_id, df_topics):
     Retourne une chaîne de mots pondérée (répétée selon la probabilité) pour WordCloud.
     """
     if df_topics is None or df_topics.empty:
-        return ""
-    if "word" in df_topics.columns and "topic" in df_topics.columns:
-        subset = df_topics[df_topics["topic"] == topic_id]
-        if subset.empty:
-            return ""
-        words = []
-        for _, row in subset.iterrows():
-            word = str(row["word"])
-            repeats = max(1, int(round(row.get("probability", 0.05) * 100)))
-            words.extend([word] * repeats)
-        return " ".join(words)
-    # Format large legacy (word_0, word_1, ...) — rétro-compatibilité
+        # Distributions de topics (matrices doc x topic pour les tests/visualisations)
+        topic_dist_2024 = MODELS_DIR / "topic_dists_2024.npy"
+        topic_dist_2025 = MODELS_DIR / "topic_dists_2025.npy"
+        if topic_dist_2024.exists() and topic_dist_2025.exists():
+            try:
+                data["topic_dists_2024"] = np.load(topic_dist_2024)
+                data["topic_dists_2025"] = np.load(topic_dist_2025)
+            except Exception:
+                pass
+
+        return data
     words = []
     for i in range(10):
         col = f"word_{i}"
