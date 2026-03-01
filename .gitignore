@@ -1,39 +1,45 @@
-# Environnement virtuel
+### Environnements / dépendances
 .audit/
+.venv/
+venv/
 
-# Cache
+### Caches Python / tests
 __pycache__/
 .pytest_cache/
+*.pyc
 
-# VS Code
+### IDE / éditeurs
 .vscode/
+.idea/
 
-# Logs
+### Logs
 logs/
-
-# Outputs générés
-outputs/
-data/processed/
-build/
-dist/
 *.log
 
-# Modèles lourds
+### Artefacts de build / distribution
+build/
+dist/
+*.egg-info/
+
+### Données dérivées (reproductibles)
+outputs/
+data/processed/
+
+### Modèles et tableaux lourds dérivés
 *.npy
 *.pt
 *.h5
 *.pkl
 
-# Fichiers Excel générés
+### Fichiers bureautiques et exports
 *.xlsx
-*.txt
 
-# Fichiers images générés
+### Images générées automatiquement
 *.png
 
-# Notebooks checkpoints
+### Notebooks checkpoints
 .ipynb_checkpoints/
 
-# Fichiers système
+### Fichiers système
 .DS_Store
 Thumbs.db
