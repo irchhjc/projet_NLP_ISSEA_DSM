@@ -46,6 +46,7 @@ La configuration centrale se trouve dans `src/audit_semantique/config.py`.
 Le pipeline de bout en bout est orchestré par :
 
 ```bash
+poetry run python -m spacy download fr_core_news_sm
 poetry run python scripts/main_pipeline.py
 ```
 
