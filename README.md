@@ -9,121 +9,139 @@ Outil complet d'audit sémantique de la Loi de Finances du Cameroun :
 
 ---
 
-## 1. Installation
+## 1. Prérequis & installation
 
-Le projet est géré avec [Poetry](https://python-poetry.org/).
+### Python et Poetry
+
+- Python supporté : `>= 3.11, < 3.15`
+- Gestion des dépendances : [Poetry](https://python-poetry.org/)
+
+Depuis la racine du projet :
 
 ```bash
 poetry install
 
-# (optionnel) téléchargement des ressources spaCy FR
-poetry run python -m spacy download fr_core_news_sm || echo "spaCy FR déjà installé ou optionnel"
+# (recommandé) télécharger le modèle spaCy FR utilisé pour les stopwords
+poetry run python -m spacy download fr_core_news_sm
 ```
 
-> Remarque : un environnement virtuel `.audit/` peut être utilisé pour l'exécution locale.
+---
+
+## 2. Données d'entrée
+
+Placer les fichiers bruts dans `data/raw` :
+
+- `loi_finances_1_articles_id_titre_chapitre_contenu.json` → Loi de finances 2024
+- `loi_finances_2_articles_id_titre_chapitre_contenu.json` → Loi de finances 2025
+
+Les sorties sont générées automatiquement dans :
+
+- `outputs/models` : embeddings (`embeddings_2024.npy`, `embeddings_2025.npy`, objectifs…)
+- `outputs/reports` : fichiers Excel (audit sémantique, topics, clusters, budget, baromètre)
+- `outputs/figures` : figures statiques (UMAP, distributions, etc.)
+
+Les chemins et hyperparamètres sont centralisés dans `src/audit_semantique/config.py`.
 
 ---
 
-## 2. Données attendues
+## 3. Exécuter le pipeline complet
 
-Les fichiers bruts doivent être placés dans `data/raw` :
-
-- `loi_finances_1_articles_id_titre_chapitre_contenu.json` (année 2024)
-- `loi_finances_2_articles_id_titre_chapitre_contenu.json` (année 2025)
-
-Les sorties sont générées dans :
-
-- `outputs/models` : embeddings (`embeddings_2024.npy`, `embeddings_2025.npy`…)
-- `outputs/reports` : fichiers Excel d'analyse (audit, topics, clusters, budget, baromètre)
-- `outputs/figures` : figures statiques (heatmaps, t‑SNE/UMAP, etc.)
-
-La configuration centrale se trouve dans `src/audit_semantique/config.py`.
-
----
-
-## 3. Pipeline principal
-
-Le pipeline de bout en bout est orchestré par :
+Commande unique pour lancer tout le pipeline d’audit :
 
 ```bash
-poetry run python -m spacy download fr_core_news_sm
 poetry run python scripts/main_pipeline.py
 ```
 
-Ce script effectue notamment :
+Ce script ([scripts/main_pipeline.py](scripts/main_pipeline.py)) enchaîne :
 
 1. Chargement des lois 2024/2025 depuis `data/raw`.
-2. Prétraitement des textes (titres et contenus) via `TextPreprocessor` :
-	- passage en minuscules, normalisation
-	- suppression des URLs, nombres, ponctuation
-	- stopwords français de spaCy + stopwords métiers personnalisés
-3. Construction du texte d'entrée pour les embeddings des articles :
-	- `cleaned_title + " [SEP] " + cleaned_content` pour chaque article.
-4. Génération des embeddings avec sentence-transformers :
-	- modèle : `sentence-transformers/paraphrase-multilingual-mpnet-base-v2`
-	- paramètres contrôlés par `EMBEDDING_PARAMS` dans `config.py`
-	- les embeddings sont **recalculés à chaque exécution** et sauvegardés dans `outputs/models`.
-5. Génération des embeddings pour les objectifs budgétaires :
-	- texte d'entrée : `cleaned_programme + " [SEP] " + cleaned_objectif` (même prétraitement que les articles)
-	- fichiers produits : `embeddings_objectifs_2024.npy`, `embeddings_objectifs_2025.npy`.
-6. Topic modeling (LDA) et affectation d'un topic dominant par article.
-7. Clustering (K-Means, HDBSCAN) sur les embeddings d'articles.
-8. Classification zero-shot des objectifs budgétaires sur les piliers du SND30 :
-	- modèle : `MoritzLaurer/mDeBERTa-v3-base-mnli-xnli`
-	- paramètres contrôlés par `ZERO_SHOT_PARAMS`.
-9. Calcul d'indicateurs statistiques (tests, distributions) et génération des rapports Excel.
+2. Prétraitement des textes via `TextPreprocessor` :
+   - minuscules, normalisation, suppression URLs/nombres/ponctuation
+   - stopwords français spaCy + stopwords métiers
+3. Construction du texte d'entrée pour les embeddings articles :
+   - `cleaned_title + " [SEP] " + cleaned_content`
+4. Embeddings des articles avec sentence-transformers :
+   - modèle : `sentence-transformers/paraphrase-multilingual-mpnet-base-v2`
+   - longueur max tronquée à 512 tokens (voir `EMBEDDING_PARAMS`)
+5. Embeddings des objectifs budgétaires :
+   - `cleaned_programme + " [SEP] " + cleaned_objectif`
+6. Topic modeling (LDA) + topic dominant par article.
+7. Clustering (K-Means, HDBSCAN) sur les embeddings d’articles.
+8. Classification zero-shot des objectifs sur les piliers SND30 :
+   - modèle : `MoritzLaurer/mDeBERTa-v3-base-mnli-xnli`
+9. Calcul des indicateurs statistiques et génération des rapports Excel.
 
-Tous les hyperparamètres (embeddings, zero-shot, LDA, clustering, UMAP, audit) sont centralisés dans `config.py`.
+Toutes les étapes loggent dans `logs/main_pipeline.log`.
 
 ---
 
-## 4. Dashboard interactif
+## 4. Lancer le dashboard interactif
 
-Le dashboard Dash consomme les sorties du pipeline et offre plusieurs vues :
-
-- glissement sémantique entre les lois 2024 et 2025
-- topics LDA par année et comparaison 2024/2025
-- clustering des articles (K-Means / HDBSCAN, métriques internes)
-- baromètre SND30 (répartition des objectifs, scores, budget AE/CP)
-- correspondances objectifs ↔ articles (top 3 objectifs similaires et top 2 articles de loi proches pour un objectif donné)
-- tests statistiques et analyses budgétaires
-
-Lancer le dashboard après avoir exécuté le pipeline :
+Une fois le pipeline exécuté (données et rapports disponibles), lancer l’application Dash :
 
 ```bash
 poetry run python scripts/run_dash.py
 ```
 
-Le serveur Dash est alors accessible sur `http://127.0.0.1:8050/` (par défaut).
+Cela démarre le serveur Dash défini dans [src/audit_semantique/dashboard/app_dash.py](src/audit_semantique/dashboard/app_dash.py).
 
-### Nuages de mots (WordClouds)
+Par défaut, le dashboard est accessible à l’adresse :
 
-Tous les nuages de mots sont construits **à partir de texte nettoyé** :
+- http://127.0.0.1:8050/
 
-- pour le baromètre des objectifs, les objectifs sont prétraités avec `TextPreprocessor` avant agrégation
-- pour les topics, les mots proviennent directement des sorties LDA pondérées
-- pour les clusters, les textes agrégés utilisent `cleaned_title` / `cleaned_content` (ou, à défaut, un nettoyage à la volée)
+Le dashboard propose notamment :
 
-Cela garantit que les WordClouds reflètent le même texte prétraité que celui utilisé pour les embeddings et les analyses.
+- baromètre budgétaire & sémantique (AE/CP, piliers SND30)
+- glissement sémantique (similarités 2024 vs 2025)
+- topics LDA par année et comparaison
+- clustering des articles (K-Means / HDBSCAN + métriques)
+- correspondances objectifs ↔ articles via les embeddings
+- tests statistiques et distributions budgétaires
+
+### WordClouds & texte nettoyé
+
+Les nuages de mots utilisent systématiquement le texte prétraité :
+
+- objectifs : texte passé par `TextPreprocessor` avant agrégation
+- topics : mots issus directement des sorties LDA pondérées
+- clusters : agrégation de `cleaned_title` / `cleaned_content`
 
 ---
 
-## 5. Structure du package
+## 5. Structure du code
 
-Le code source est organisé en modules :
+Le package `audit_semantique` (sous `src/`) est organisé en sous-modules :
 
-- `audit` : logique d'audit sémantique principal (similarité inter‑annuelle)
-- `clustering` : algorithmes et wrappers de clustering
-- `modeling` : embeddings (sentence-transformers) et classification zero-shot
-- `preprocessing` : chargement des données et nettoyage de texte
+- `audit` : audit sémantique principal (similarité inter‑annuelle)
+- `clustering` : algos et wrappers de clustering
+- `modeling` : embeddings sentence-transformers & zero-shot
+- `preprocessing` : chargement et nettoyage des données
 - `stats` : statistiques descriptives et tests
-- `topic_modeling` : LDA, sujets et distributions de mots
+- `topic_modeling` : LDA et gestion des topics
 - `visualization` : figures Matplotlib/Seaborn/Plotly
 - `dashboard` : application Dash et callbacks
 
 ---
 
-## 6. Auteur et licence
+## 6. Exécution rapide (récap)
+
+```bash
+# 1) Installer dépendances
+poetry install
+poetry run python -m spacy download fr_core_news_sm
+
+# 2) Vérifier/placer les fichiers bruts dans data/raw
+
+# 3) Lancer le pipeline
+poetry run python scripts/main_pipeline.py
+
+# 4) Lancer le dashboard
+poetry run python scripts/run_dash.py
+```
+
+---
+
+## 7. Auteur
 
 - Auteur : Irch Defluviaire, ISEL5-DSM ISSEA-CEMAC
-- Licence : MIT
+
