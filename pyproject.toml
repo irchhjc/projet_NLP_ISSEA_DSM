@@ -43,3 +43,10 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 package-dir = {"" = "src"}
 packages = { find = { where = ["src"] } }
+
+# Configuration spécifique à Poetry pour lui indiquer où se trouve le
+# package Python à installer lorsque l'on fait `poetry install`.
+[tool.poetry]
+packages = [
+    { include = "audit_semantique", from = "src" },
+]

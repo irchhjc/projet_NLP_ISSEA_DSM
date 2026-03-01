@@ -8,6 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+import os
 import dash
 from dash import dcc, html, Input, Output, State
 import dash_bootstrap_components as dbc
@@ -29,7 +30,6 @@ import re
 pio.templates.default = "plotly_white"
 
 from audit_semantique.preprocessing.text_cleaner import TextPreprocessor
-
 from audit_semantique.config import (
     AUDIT_PARAMS,
     FIGURES_DIR,
@@ -39,6 +39,12 @@ from audit_semantique.config import (
     REPORTS_DIR,
     UMAP_PARAMS,
 )
+
+print("[DEBUG] REPORTS_DIR:", REPORTS_DIR)
+if hasattr(REPORTS_DIR, 'glob'):
+    print("[DEBUG] Fichiers dans REPORTS_DIR:", list(REPORTS_DIR.glob('*')))
+else:
+    print("[DEBUG] REPORTS_DIR n'est pas un Path, type:", type(REPORTS_DIR))
 
 # Cache léger pour éviter de régénérer les nuages de mots à chaque interaction
 _BAROMETER_WC_CACHE: dict[tuple[str, str], str] = {}
@@ -58,59 +64,12 @@ def _cohens_d(x: np.ndarray, y: np.ndarray) -> float:
     y = y[np.isfinite(y)]
     if len(x) < 2 or len(y) < 2:
         return float("nan")
-    vx = x.var(ddof=1)
-    vy = y.var(ddof=1)
-    s = np.sqrt((vx + vy) / 2.0)
-    if s == 0:
-        return 0.0
-    return float((y.mean() - x.mean()) / s)
+    mean_diff = x.mean() - y.mean()
+    pooled_std = np.sqrt((x.std(ddof=1) ** 2 + y.std(ddof=1) ** 2) / 2)
+    return float(mean_diff / pooled_std) if pooled_std > 0 else float("nan")
 
 
-def _cliffs_delta(x: np.ndarray, y: np.ndarray, max_pairs: int = 250_000) -> float:
-    """Cliff's delta (approx by subsampling if too many pairs)."""
-    x = np.asarray(x, dtype=float)
-    y = np.asarray(y, dtype=float)
-    x = x[np.isfinite(x)]
-    y = y[np.isfinite(y)]
-    if len(x) == 0 or len(y) == 0:
-        return float("nan")
-    # Subsample to keep O(n*m) bounded
-    nx, ny = len(x), len(y)
-    if nx * ny > max_pairs:
-        rng = np.random.default_rng(42)
-        sx = min(nx, int(np.sqrt(max_pairs)))
-        sy = min(ny, int(np.sqrt(max_pairs)))
-        x = rng.choice(x, size=sx, replace=False)
-        y = rng.choice(y, size=sy, replace=False)
-    # vectorized comparisons
-    gt = (x[:, None] > y[None, :]).sum()
-    lt = (x[:, None] < y[None, :]).sum()
-    return float((gt - lt) / (x.size * y.size))
-
-
-def _cramers_v(contingency: pd.DataFrame) -> float:
-    """Cramer's V effect size for chi-square contingency table."""
-    if contingency.empty:
-        return float("nan")
-    from scipy.stats import chi2_contingency
-
-    chi2, _, _, _ = chi2_contingency(contingency)
-    n = contingency.to_numpy().sum()
-    if n == 0:
-        return float("nan")
-    r, k = contingency.shape
-    denom = n * (min(r - 1, k - 1))
-    if denom <= 0:
-        return float("nan")
-    return float(np.sqrt(chi2 / denom))
-
-
-def _cluster_metrics(
-    X: np.ndarray,
-    labels: np.ndarray,
-    sample_size: int = 1200,
-    random_state: int = 42,
-) -> dict:
+def _cluster_metrics(X, labels, sample_size: int = 2000, random_state: int = 42) -> dict:
     """Calcule des métriques de clustering de façon robuste et rapide (sampling)."""
     from sklearn.metrics import (
         calinski_harabasz_score,
@@ -131,7 +90,7 @@ def _cluster_metrics(
     n_clusters = int(len([c for c in unique_labels if c != -1]))
     pct_noise = float((labels == -1).mean() * 100.0) if n_points else float("nan")
 
-    # pour silhouette / DB / CH : besoin >= 2 clusters (hors bruit si présent)
+    # Pour silhouette / DB / CH : besoin >= 2 clusters (hors bruit si présent)
     use_mask = labels != -1 if (-1 in unique_labels) else np.ones_like(labels, dtype=bool)
     X2 = X[use_mask]
     y2 = labels[use_mask]
@@ -173,6 +132,7 @@ def _cluster_metrics(
 
     return out
 
+
 # ══════════════════════════════════════════════════════════════════════════════
 # CHARGEMENT DES DONNÉES
 # ══════════════════════════════════════════════════════════════════════════════
@@ -180,15 +140,13 @@ def _cluster_metrics(
 def load_all_data():
     """Charge toutes les données nécessaires pour le dashboard."""
     data = {}
-    
-    # Chargement silencieux, on ignore les fichiers manquants
+
     # Données budgétaires
     budget_file = REPORTS_DIR / "analyse_budgetaire.xlsx"
     if budget_file.exists():
         data['budget_2024'] = pd.read_excel(budget_file, sheet_name="Budget_2024")
         data['budget_2025'] = pd.read_excel(budget_file, sheet_name="Budget_2025")
 
-        # Piliers : on garde les données telles quelles mais on remappe les index
         piliers_2024 = pd.read_excel(budget_file, sheet_name="Piliers_2024", index_col=0)
         piliers_2025 = pd.read_excel(budget_file, sheet_name="Piliers_2025", index_col=0)
         comparison = pd.read_excel(budget_file, sheet_name="Comparaison_2024_2025", index_col=0)
@@ -214,8 +172,7 @@ def load_all_data():
             ignore_index=True,
         )
 
-    # Similarités des embeddings (fichiers annuels + fichier agrégé pour le baromètre)
-    # Fichier agrégé
+    # Similarités des embeddings (fichier agrégé)
     emb_all = REPORTS_DIR / "embeddings_similarities.xlsx"
     if emb_all.exists():
         data['embeddings_similarities'] = pd.read_excel(emb_all)
@@ -249,8 +206,7 @@ def load_all_data():
         if f.exists():
             data[key] = pd.read_excel(f)
 
-    # Embeddings (vecteurs) + UMAP (projection 2D) pour enrichir le baromètre
-    # Note: on reste "best-effort" : si UMAP/numba n'est pas dispo, on ne casse pas le dashboard.
+    # Embeddings (vecteurs) + UMAP (projection 2D)
     emb_file_2024 = MODELS_DIR / "embeddings_2024.npy"
     emb_file_2025 = MODELS_DIR / "embeddings_2025.npy"
     if emb_file_2024.exists() and emb_file_2025.exists():
@@ -260,14 +216,12 @@ def load_all_data():
             data["embeddings_2024"] = emb_2024
             data["embeddings_2025"] = emb_2025
 
-            # Construire une table de métadonnées "article" (id/titre/chapitre + topics/clusters)
             def _safe_article_meta(year: int) -> pd.DataFrame:
                 """Récupère des métadonnées article depuis les exports Excel si disponibles."""
                 df = None
                 df_topics = data.get(f"articles_topics_{year}")
                 df_clusters = data.get(f"articles_clusters_{year}")
 
-                # Base: topics si possible (contient typiquement id, titre, chapitre, content, dominant_topic)
                 if isinstance(df_topics, pd.DataFrame) and not df_topics.empty:
                     df = df_topics.copy()
                 elif isinstance(df_clusters, pd.DataFrame) and not df_clusters.empty:
@@ -275,10 +229,8 @@ def load_all_data():
                 else:
                     return pd.DataFrame()
 
-                # Merge clusters si dispo
                 if isinstance(df_clusters, pd.DataFrame) and not df_clusters.empty:
                     if "id" in df.columns and "id" in df_clusters.columns:
-                        # Éviter la duplication de colonnes communes non-clés
                         right = df_clusters.copy()
                         dup = [c for c in right.columns if c in df.columns and c != "id"]
                         if dup:
@@ -295,7 +247,6 @@ def load_all_data():
             try:
                 combined = np.vstack([emb_2024, emb_2025])
 
-                # Si une projection UMAP est déjà stockée, on la charge (sinon on la calcule)
                 umap_coords_file = MODELS_DIR / "umap_coords.npy"
                 umap_coords_2024_file = MODELS_DIR / "umap_2024.npy"
                 umap_coords_2025_file = MODELS_DIR / "umap_2025.npy"
@@ -307,16 +258,11 @@ def load_all_data():
                     coords_25 = np.load(umap_coords_2025_file)
                     coords = np.vstack([coords_24, coords_25])
                 else:
-                    # IMPORTANT: on n'entraîne PAS UMAP au démarrage du dashboard
-                    # (numba/pynndescent peut être très long à compiler).
-                    # Pour activer la vue UMAP, pré-calculer et sauvegarder `umap_coords.npy`
-                    # (ou `umap_2024.npy` + `umap_2025.npy`) dans outputs/models.
                     raise FileNotFoundError(
                         "Projection UMAP non trouvée. Ajoutez `outputs/models/umap_coords.npy` "
                         "ou `umap_2024.npy`+`umap_2025.npy` pour activer la visualisation UMAP."
                     )
 
-                # Construire df_viz en conservant l'ordre des embeddings
                 n24 = len(emb_2024)
                 n25 = len(emb_2025)
                 if coords.shape[0] != (n24 + n25) or coords.shape[1] < 2:
@@ -332,7 +278,6 @@ def load_all_data():
                     }
                 )
 
-                # Ajouter métadonnées si alignables par longueur (sinon fallback sur row_idx)
                 def _attach_meta(df_umap_part: pd.DataFrame, meta: pd.DataFrame, n: int) -> pd.DataFrame:
                     if meta is None or meta.empty:
                         df_umap_part["id"] = [f"{df_umap_part['annee'].iloc[0]}_{i+1}" for i in range(n)]
@@ -342,7 +287,6 @@ def load_all_data():
                         meta_part = meta.iloc[:n].copy()
                     else:
                         meta_part = meta.copy()
-                        # compléter si meta plus court
                         missing = n - len(meta_part)
                         if missing > 0:
                             meta_part = pd.concat(
@@ -350,13 +294,11 @@ def load_all_data():
                                 ignore_index=True,
                             )
 
-                    # Harmoniser certaines colonnes attendues
                     if "id" in meta_part.columns:
                         meta_part["id"] = meta_part["id"].astype(str)
                     else:
                         meta_part["id"] = [f"{df_umap_part['annee'].iloc[0]}_{i+1}" for i in range(n)]
 
-                    # ne garder que quelques colonnes utiles au hover
                     keep_cols = [c for c in [
                         "id", "titre", "chapitre", "dominant_topic", "cluster_kmeans", "cluster_hdbscan"
                     ] if c in meta_part.columns]
@@ -375,11 +317,9 @@ def load_all_data():
                 data["umap_df"] = df_umap
 
             except Exception as e:
-                # ImportError umap/numba ou calcul UMAP : on ignore
                 data["umap_error"] = str(e)
 
         except Exception as e:
-            # Lecture .npy ou autre problème : on ignore
             data["embeddings_error"] = str(e)
 
     return data
@@ -397,7 +337,7 @@ def map_pilier_label(value):
 # Charger les données au démarrage
 DATA = load_all_data()
 
-# Couleurs des piliers SND30 (utilise des clés symboliques, pas impacté par les labels courts)
+# Couleurs des piliers SND30
 PILIER_COLORS = {
     'Gouvernance': '#1f77b4',
     'Transformation_Structurelle': '#ff7f0e',
@@ -413,12 +353,11 @@ PILIER_COLORS = {
 def create_wordcloud(text, colormap='viridis', max_words=50):
     """Crée un nuage de mots et le retourne en base64."""
     if not text or len(text.strip()) == 0:
-        # Image vide si pas de texte
         img = Image.new('RGB', (800, 400), color='white')
         buffered = BytesIO()
         img.save(buffered, format="PNG")
         return base64.b64encode(buffered.getvalue()).decode()
-    
+
     wordcloud = WordCloud(
         width=800,
         height=400,
@@ -428,8 +367,7 @@ def create_wordcloud(text, colormap='viridis', max_words=50):
         relative_scaling=0.5,
         min_font_size=10
     ).generate(text)
-    
-    # Convertir en image PIL puis en base64
+
     img = wordcloud.to_image()
     buffered = BytesIO()
     img.save(buffered, format="PNG")
@@ -445,12 +383,10 @@ def extract_topic_words(topic_id, df_topics):
     """
     if df_topics is None or df_topics.empty:
         return ""
-    # Format long : une ligne par (topic, mot)
     if "word" in df_topics.columns and "topic" in df_topics.columns:
         subset = df_topics[df_topics["topic"] == topic_id]
         if subset.empty:
             return ""
-        # Répéter chaque mot proportionnellement à sa probabilité
         words = []
         for _, row in subset.iterrows():
             word = str(row["word"])
@@ -504,28 +440,28 @@ sidebar = html.Div([
         html.P("Loi de Finances du Cameroun", className="text-center text-white-50"),
         html.P("ISE3-DS | ISSEA Yaoundé | 2025-2026", className="text-center text-white-50 small"),
     ], style={'padding': '20px'}),
-    
+
     html.Hr(style={'borderColor': 'rgba(255,255,255,0.2)'}),
-    
+
     dbc.Nav([
-        dbc.NavLink([html.I(className="fas fa-home me-2"), "Accueil"], 
+        dbc.NavLink([html.I(className="fas fa-home me-2"), "Accueil"],
                     href="/", active="exact", className="text-white"),
-        dbc.NavLink([html.I(className="fas fa-chart-line me-2"), "Baromètre"], 
+        dbc.NavLink([html.I(className="fas fa-chart-line me-2"), "Baromètre"],
                     href="/barometer", active="exact", className="text-white"),
-        dbc.NavLink([html.I(className="fas fa-tags me-2"), "Classification SND30"], 
+        dbc.NavLink([html.I(className="fas fa-tags me-2"), "Classification SND30"],
                     href="/classification", active="exact", className="text-white"),
-        dbc.NavLink([html.I(className="fas fa-brain me-2"), "Topic Modeling"], 
+        dbc.NavLink([html.I(className="fas fa-brain me-2"), "Topic Modeling"],
                     href="/topics", active="exact", className="text-white"),
-        dbc.NavLink([html.I(className="fas fa-project-diagram me-2"), "Clustering"], 
+        dbc.NavLink([html.I(className="fas fa-project-diagram me-2"), "Clustering"],
                     href="/clustering", active="exact", className="text-white"),
-        dbc.NavLink([html.I(className="fas fa-money-bill-wave me-2"), "Analyse Budgétaire"], 
+        dbc.NavLink([html.I(className="fas fa-money-bill-wave me-2"), "Analyse Budgétaire"],
                     href="/budget", active="exact", className="text-white"),
-        dbc.NavLink([html.I(className="fas fa-chart-bar me-2"), "Tests Statistiques"], 
+        dbc.NavLink([html.I(className="fas fa-chart-bar me-2"), "Tests Statistiques"],
                     href="/stats", active="exact", className="text-white"),
     ], vertical=True, pills=True),
-    
+
     html.Hr(style={'borderColor': 'rgba(255,255,255,0.2)', 'marginTop': '20px'}),
-    
+
     html.Div([
         html.P("Modèles utilisés", className="text-white-50 small mb-1"),
         html.P("• Classification par mots-clés", className="text-white-50 small mb-0"),
@@ -568,12 +504,12 @@ def create_home_page():
     """Page d'accueil."""
     return html.Div([
         html.H1("🇨🇲 Audit Sémantique des Lois de Finances du Cameroun", className="mb-4"),
-        
+
         dbc.Alert([
             html.H4("📊 Dashboard Interactif d'Analyse Sémantique et Budgétaire", className="alert-heading"),
             html.P("Analyse comparative des lois de finances 2024 et 2025 du Cameroun selon les piliers de la SND30"),
         ], color="info"),
-        
+
         dbc.Row([
             dbc.Col([
                 dbc.Card([
@@ -584,7 +520,7 @@ def create_home_page():
                     ])
                 ], className="mb-3 shadow-sm")
             ], md=3),
-            
+
             dbc.Col([
                 dbc.Card([
                     dbc.CardBody([
@@ -594,7 +530,7 @@ def create_home_page():
                     ])
                 ], className="mb-3 shadow-sm")
             ], md=3),
-            
+
             dbc.Col([
                 dbc.Card([
                     dbc.CardBody([
@@ -604,7 +540,7 @@ def create_home_page():
                     ])
                 ], className="mb-3 shadow-sm")
             ], md=3),
-            
+
             dbc.Col([
                 dbc.Card([
                     dbc.CardBody([
@@ -615,16 +551,16 @@ def create_home_page():
                 ], className="mb-3 shadow-sm")
             ], md=3),
         ]),
-        
+
         html.Hr(className="my-4"),
-        
+
         html.H3("📖 À propos du projet", className="mb-3"),
         html.P("""
-        Ce dashboard présente une analyse budgétaire et sémantique des lois de finances du Cameroun pour les années 
-        2024 et 2025. L'objectif est de mesurer l'alignement des dépenses publiques avec les piliers de la 
+        Ce dashboard présente une analyse budgétaire et sémantique des lois de finances du Cameroun pour les années
+        2024 et 2025. L'objectif est de mesurer l'alignement des dépenses publiques avec les piliers de la
         Stratégie Nationale de Développement (SND30 2020-2030).
         """),
-        
+
         html.H4("🎯 Méthodologie", className="mb-2 mt-4"),
         html.Ul([
             html.Li("Classification des objectifs budgétaires par mots-clés selon les piliers SND30"),
@@ -633,7 +569,7 @@ def create_home_page():
             html.Li("Nuages de mots pour topics et clusters thématiques"),
             html.Li("Statistiques comparatives 2024 vs 2025"),
         ]),
-        
+
         html.H4("🌟 Piliers SND30", className="mb-2 mt-4"),
         dbc.Row([
             dbc.Col([
@@ -653,7 +589,7 @@ def create_home_page():
                 html.Span("Coopération, diplomatie, CEMAC"),
             ], md=6, className="mb-2"),
         ]),
-        
+
         html.Hr(className="my-4"),
         html.P("Développé par ISE3-DS | ISSEA Yaoundé | 2025-2026", className="text-muted text-center"),
     ])
@@ -671,19 +607,19 @@ def create_topics_page():
                 html.Code("poetry run python scripts/run_pipeline.py", className="d-block p-2 bg-dark text-white"),
             ], color="warning")
         ])
-    
+
     topics_2024 = DATA['lda_topics_2024']
     topics_2025 = DATA['lda_topics_2025']
-    
+
     return html.Div([
         html.H1("📚 Topic Modeling - Analyse LDA", className="mb-4"),
-        
+
         dbc.Tabs([
             dbc.Tab(label="📅 2024", tab_id="tab-2024"),
             dbc.Tab(label="📅 2025", tab_id="tab-2025"),
             dbc.Tab(label="🔄 Comparaison", tab_id="tab-comparison"),
         ], id="topics-tabs", active_tab="tab-2024"),
-        
+
         html.Div(id="topics-content", className="mt-4")
     ])
 
@@ -700,15 +636,15 @@ def create_clustering_page():
                 html.Code("poetry run python scripts/run_pipeline.py", className="d-block p-2 bg-dark text-white"),
             ], color="warning")
         ])
-    
+
     return html.Div([
         html.H1("🔵 Clustering K-Means & HDBSCAN", className="mb-4"),
-        
+
         dbc.Tabs([
             dbc.Tab(label="📅 2024", tab_id="cluster-2024"),
             dbc.Tab(label="📅 2025", tab_id="cluster-2025"),
         ], id="clustering-tabs", active_tab="cluster-2024"),
-        
+
         html.Div(id="clustering-content", className="mt-4")
     ])
 
@@ -719,21 +655,21 @@ def create_budget_page():
         return html.Div([
             dbc.Alert("⚠️ Données budgétaires non disponibles. Exécutez: python scripts/analyze_budget.py", color="warning")
         ])
-    
+
     budget_2024 = DATA['budget_2024']
     budget_2025 = DATA['budget_2025']
     piliers_2024 = DATA['piliers_2024']
     piliers_2025 = DATA['piliers_2025']
     comparison = DATA['comparison']
-    
+
     total_ae_2024 = budget_2024['ae'].sum()
     total_cp_2024 = budget_2024['cp'].sum()
     total_ae_2025 = budget_2025['ae'].sum()
     total_cp_2025 = budget_2025['cp'].sum()
-    
+
     return html.Div([
         html.H1("💰 Analyse Budgétaire AE/CP 2024-2025", className="mb-4"),
-        
+
         # Métriques globales
         dbc.Row([
             dbc.Col([
@@ -773,9 +709,9 @@ def create_budget_page():
                 ])
             ], md=3),
         ], className="mb-4"),
-        
+
         html.Hr(),
-        
+
         # Sélecteur d'année
         dbc.Row([
             dbc.Col([
@@ -792,7 +728,7 @@ def create_budget_page():
                 )
             ])
         ]),
-        
+
         # Graphiques
         dbc.Row([
             dbc.Col([
@@ -802,14 +738,14 @@ def create_budget_page():
                 dcc.Graph(id='budget-bar-chart')
             ], md=6),
         ], className="mb-4"),
-        
+
         html.Hr(),
-        
+
         html.H3("🔝 Top 15 Lignes Budgétaires (AE)", className="mb-3"),
         dcc.Graph(id='budget-top-programs'),
-        
+
         html.Hr(),
-        
+
         html.H3("📊 Évolution 2024 → 2025 par Pilier", className="mb-3"),
         dcc.Graph(id='budget-evolution-chart'),
     ])
@@ -821,30 +757,24 @@ def create_classification_page():
         return html.Div([
             dbc.Alert("⚠️ Données budgétaires non disponibles", color="warning")
         ])
-    
-    budget_2024 = DATA['budget_2024']
-    budget_2025 = DATA['budget_2025']
-    piliers_2024 = DATA['piliers_2024']
-    piliers_2025 = DATA['piliers_2025']
-    
+
     return html.Div([
         html.H1("🏷️ Classification SND30 des Objectifs Budgétaires", className="mb-4"),
-        
+
         dbc.Alert([
             html.P("Classification des objectifs des lignes budgétaires selon les piliers de la SND30", className="mb-0")
         ], color="info"),
-        
+
         html.Hr(),
-        
-        # Distribution par pilier
+
         html.H3("📊 Distribution des Objectifs par Pilier", className="mb-3"),
-        
+
         dbc.Tabs([
             dbc.Tab(label="📅 2024", tab_id="classif-2024"),
             dbc.Tab(label="📅 2025", tab_id="classif-2025"),
             dbc.Tab(label="🔄 Comparaison", tab_id="classif-comp"),
         ], id="classification-tabs", active_tab="classif-2024"),
-        
+
         html.Div(id="classification-content", className="mt-4")
     ])
 
@@ -855,14 +785,13 @@ def create_barometer_page():
         return html.Div([
             dbc.Alert("⚠️ Données budgétaires non disponibles", color="warning")
         ])
-    
+
     budget_2024 = DATA['budget_2024']
     budget_2025 = DATA['budget_2025']
     piliers_2024 = DATA['piliers_2024']
     piliers_2025 = DATA['piliers_2025']
     comparison = DATA['comparison']
 
-    # Calculer les métriques budgétaires
     total_ae_2024 = budget_2024['ae'].sum()
     total_ae_2025 = budget_2025['ae'].sum()
     croissance_ae = ((total_ae_2025 / total_ae_2024) - 1) * 100
@@ -871,7 +800,6 @@ def create_barometer_page():
     total_cp_2025 = budget_2025['cp'].sum()
     croissance_cp = ((total_cp_2025 / total_cp_2024) - 1) * 100
 
-    # Nombre de lignes par pilier
     n_lignes_2024 = len(budget_2024)
     n_lignes_2025 = len(budget_2025)
 
@@ -882,7 +810,6 @@ def create_barometer_page():
     if 'embeddings_similarities' in DATA:
         sim_df = DATA['embeddings_similarities'].copy()
     elif 'similarities_2024' in DATA or 'similarities_2025' in DATA:
-        # Construire un DataFrame agrégé à partir des fichiers annuels
         parts = []
         if 'similarities_2024' in DATA:
             tmp = DATA['similarities_2024'].copy()
@@ -895,13 +822,11 @@ def create_barometer_page():
         if parts:
             sim_df = pd.concat(parts, ignore_index=True)
 
-    # Statistiques de glissement sémantique
     mean_sim_2024 = mean_sim_2025 = pct_changement_2024 = pct_changement_2025 = None
     fig_glissement = go.Figure()
 
     if sim_df is not None and not sim_df.empty and 'score_max_similarite' in sim_df.columns:
         if 'annee' not in sim_df.columns:
-            # Si la colonne année est absente, on suppose que toutes les valeurs sont 2024
             sim_df['annee'] = 2024
 
         sims_2024 = sim_df[sim_df['annee'] == 2024]['score_max_similarite'].dropna()
@@ -914,7 +839,6 @@ def create_barometer_page():
             mean_sim_2025 = sims_2025.mean()
             pct_changement_2025 = (sims_2025 < seuil).mean() * 100
 
-        # Histogramme / densité des similarités par année
         fig_glissement = px.histogram(
             sim_df,
             x='score_max_similarite',
@@ -935,7 +859,7 @@ def create_barometer_page():
 
     return html.Div([
         html.H1("📊 Baromètre Budgétaire & Sémantique 2024-2025", className="mb-4"),
-        
+
         # Métriques principales
         dbc.Row([
             dbc.Col([
@@ -947,7 +871,7 @@ def create_barometer_page():
                     ])
                 ], className="shadow-sm")
             ], md=3),
-            
+
             dbc.Col([
                 dbc.Card([
                     dbc.CardBody([
@@ -957,7 +881,7 @@ def create_barometer_page():
                     ])
                 ], className="shadow-sm")
             ], md=3),
-            
+
             dbc.Col([
                 dbc.Card([
                     dbc.CardBody([
@@ -967,7 +891,7 @@ def create_barometer_page():
                     ])
                 ], className="shadow-sm")
             ], md=3),
-            
+
             dbc.Col([
                 dbc.Card([
                     dbc.CardBody([
@@ -1194,7 +1118,7 @@ def create_barometer_page():
                             html.Li(
                                 f"Plus forte évolution: {comparison['evolution'].idxmax()} "
                                 f"(+{comparison['evolution'].max():.1f}%)"
-                            ) if 'comparison' in dir() and 'evolution' in comparison.columns else html.Li(""),
+                            ) if 'evolution' in comparison.columns else html.Li(""),
                             html.Li(f"Écart AE-CP 2025: {(total_ae_2025 - total_cp_2025)/1e9:.2f} Mds FCFA"),
                         ])
                     ], color="info"),
@@ -1210,21 +1134,16 @@ def create_stats_page():
         return html.Div([
             dbc.Alert("⚠️ Données non disponibles", color="warning")
         ])
-    
-    budget_2024 = DATA['budget_2024']
-    budget_2025 = DATA['budget_2025']
-    piliers_2024 = DATA['piliers_2024']
-    piliers_2025 = DATA['piliers_2025']
-    
+
     return html.Div([
         html.H1("📈 Tests Statistiques et Analyses", className="mb-4"),
-        
+
         dbc.Tabs([
             dbc.Tab(label="📊 Statistiques Descriptives", tab_id="stats-desc"),
             dbc.Tab(label="🔬 Tests Comparatifs", tab_id="stats-tests"),
             dbc.Tab(label="📉 Distributions", tab_id="stats-dist"),
         ], id="stats-tabs", active_tab="stats-desc"),
-        
+
         html.Div(id="stats-content", className="mt-4")
     ])
 
@@ -1272,15 +1191,12 @@ def render_topics_content(active_tab):
 def create_topics_year_content(year):
     """Crée le contenu pour une année donnée (topics)."""
     topics_df = DATA[f'lda_topics_{year}']
-    articles_df = DATA.get(f'articles_topics_{year}')
 
-    # Récupérer les IDs de topics uniques depuis le format long (colonne 'topic')
     if "topic" in topics_df.columns:
         topic_ids = sorted(topics_df["topic"].unique().tolist())
     else:
         topic_ids = list(range(4))
 
-    # Sélecteur de topic
     topic_selector = dbc.Row([
         dbc.Col([
             html.Label(f"Sélectionnez un topic {year} :"),
@@ -1322,23 +1238,19 @@ def render_topic_details(year, topic_id):
     topics_df = DATA[f'lda_topics_{year}']
     articles_df = DATA.get(f'articles_topics_{year}')
 
-    # Extraire les mots du topic (format long : colonne 'word')
     words = []
     if "word" in topics_df.columns and "topic" in topics_df.columns:
         subset = topics_df[topics_df["topic"] == topic_id]
         words = subset["word"].dropna().astype(str).tolist()
 
-    # Texte pour le nuage de mots
     topic_text = extract_topic_words(topic_id, topics_df)
     wordcloud_img = create_wordcloud(topic_text, colormap='viridis')
 
-    # Nombre d'articles associés à ce topic (colonne dominant_topic)
     if articles_df is not None and "dominant_topic" in articles_df.columns:
         n_articles = int((articles_df["dominant_topic"] == topic_id).sum())
     else:
         n_articles = 0
 
-    # Bar chart des top mots (si probabilité dispo)
     fig_words = go.Figure()
     if "word" in topics_df.columns and "topic" in topics_df.columns:
         sub = topics_df[topics_df["topic"] == topic_id].copy()
@@ -1355,7 +1267,6 @@ def render_topic_details(year, topic_id):
             )
             fig_words.update_layout(height=420, margin=dict(l=10, r=10, t=50, b=10))
         else:
-            # fallback: simple fréquence à partir de la liste de mots
             counts = pd.Series(words).value_counts().head(15).reset_index()
             counts.columns = ["word", "count"]
             fig_words = px.bar(
@@ -1368,7 +1279,6 @@ def render_topic_details(year, topic_id):
             )
             fig_words.update_layout(height=420, margin=dict(l=10, r=10, t=50, b=10))
 
-    # Répartition des topics dominants (si dispo)
     fig_prev = go.Figure()
     if articles_df is not None and "dominant_topic" in articles_df.columns:
         vc = (
@@ -1391,7 +1301,7 @@ def render_topic_details(year, topic_id):
             color_discrete_map={"Sélectionné": "#d62728", "Autres": "#1f77b4"},
         )
         fig_prev.update_layout(height=320, xaxis_title="Topic", yaxis_title="Nb articles", showlegend=False)
-    
+
     return html.Div([
         dbc.Row([
             dbc.Col([
@@ -1406,7 +1316,7 @@ def render_topic_details(year, topic_id):
                     ])
                 ])
             ], md=6),
-            
+
             dbc.Col([
                 dbc.Card([
                     dbc.CardHeader(html.H5("☁️ Nuage de Mots")),
@@ -1418,8 +1328,7 @@ def render_topic_details(year, topic_id):
                     ])
                 ])
             ], md=6),
-        ])
-        ,
+        ]),
         html.Br(),
         dbc.Row([
             dbc.Col([dcc.Graph(figure=fig_prev)], md=5),
@@ -1436,7 +1345,6 @@ def create_topics_comparison_content():
     articles_2025 = DATA.get("articles_topics_2025")
 
     def _top_words(df, topic_id, n=5):
-        """Retourne les n premiers mots d'un topic (format long)."""
         if "word" not in df.columns or "topic" not in df.columns:
             return []
         sub = df[df["topic"] == topic_id].nlargest(n, "probability") if "probability" in df.columns \
@@ -1446,7 +1354,6 @@ def create_topics_comparison_content():
     topic_ids_2024 = sorted(topics_2024["topic"].unique()) if "topic" in topics_2024.columns else range(4)
     topic_ids_2025 = sorted(topics_2025["topic"].unique()) if "topic" in topics_2025.columns else range(4)
 
-    # Prévalence (topic dominant)
     fig_prev = go.Figure()
     if (
         isinstance(articles_2024, pd.DataFrame)
@@ -1474,8 +1381,6 @@ def create_topics_comparison_content():
         )
         fig_prev.update_layout(height=420, xaxis_title="Topic", yaxis_title="Nb articles")
 
-    # Top mots pondérés par topic (format long)
-    fig_words = go.Figure()
     def _prepare_top_words(df: pd.DataFrame, year_label: str) -> pd.DataFrame:
         if df is None or df.empty or "topic" not in df.columns or "word" not in df.columns:
             return pd.DataFrame()
@@ -1483,7 +1388,6 @@ def create_topics_comparison_content():
         d["annee"] = year_label
         if "probability" in d.columns:
             d["probability"] = _safe_numeric(d["probability"]).fillna(0.0)
-            # garder top 8 mots par topic
             d = d.sort_values(["topic", "probability"], ascending=[True, False])
             d = d.groupby("topic").head(8)
         else:
@@ -1498,6 +1402,8 @@ def create_topics_comparison_content():
         ],
         ignore_index=True,
     )
+
+    fig_words = go.Figure()
     if not dfw.empty:
         fig_words = px.bar(
             dfw,
@@ -1547,13 +1453,12 @@ def render_clustering_content(active_tab):
 def create_clustering_year_content(year):
     """Crée le contenu clustering pour une année donnée."""
     clusters_df = DATA[f'articles_clusters_{year}']
-    
+
     if 'cluster_kmeans' not in clusters_df.columns:
         return dbc.Alert("⚠️ Colonne cluster_kmeans non trouvée", color="warning")
-    
+
     n_clusters = clusters_df['cluster_kmeans'].nunique()
-    
-    # Sélecteur de cluster
+
     cluster_selector = dbc.Row([
         dbc.Col([
             html.Label(f"Sélectionnez un cluster K-Means {year} :"),
@@ -1565,7 +1470,7 @@ def create_clustering_year_content(year):
             )
         ], md=6)
     ], className="mb-4")
-    
+
     return html.Div([
         html.H3(f"K-Means Clustering - {year}", className="mb-3"),
         cluster_selector,
@@ -1594,21 +1499,19 @@ def update_cluster_2025(cluster_id):
 def render_cluster_details(year, cluster_id):
     """Affiche les détails d'un cluster avec nuage de mots."""
     clusters_df = DATA[f'articles_clusters_{year}']
-    
+
     cluster_articles = clusters_df[clusters_df['cluster_kmeans'] == cluster_id]
     n_articles = len(cluster_articles)
-    
-    # Texte pour le nuage de mots
+
     cluster_text = get_cluster_texts(clusters_df, cluster_id)
     wordcloud_img = create_wordcloud(cluster_text, colormap='plasma', max_words=50)
-    
-    # Statistiques
+
     if 'pilier_dominant' in cluster_articles.columns:
         pilier_counts = cluster_articles['pilier_dominant'].value_counts()
         pilier_dominant = pilier_counts.index[0] if len(pilier_counts) > 0 else "N/A"
     else:
         pilier_dominant = "N/A"
-    
+
     return html.Div([
         dbc.Row([
             dbc.Col([
@@ -1621,13 +1524,13 @@ def render_cluster_details(year, cluster_id):
                         html.Hr(),
                         html.H6("Exemples d'articles :"),
                         html.Ul([
-                            html.Li(row['content'][:100] + "...") 
+                            html.Li(row['content'][:100] + "...")
                             for _, row in cluster_articles.head(3).iterrows()
                         ] if 'content' in cluster_articles.columns else [html.Li("Pas de contenu disponible")])
                     ])
                 ])
             ], md=6),
-            
+
             dbc.Col([
                 dbc.Card([
                     dbc.CardHeader(html.H5("☁️ Nuage de Mots du Cluster")),
@@ -1655,11 +1558,10 @@ def update_budget_charts(year):
     try:
         if f'budget_{year}' not in DATA or f'piliers_{year}' not in DATA:
             return go.Figure(), go.Figure(), go.Figure()
-        
+
         budget_df = DATA[f'budget_{year}']
         piliers_df = DATA[f'piliers_{year}']
-        
-        # Pie chart répartition par pilier
+
         fig_pie = px.pie(
             piliers_df,
             values='ae',
@@ -1669,8 +1571,7 @@ def update_budget_charts(year):
             color_discrete_sequence=px.colors.qualitative.Set2
         )
         fig_pie.update_traces(textposition='inside', textinfo='percent+label')
-        
-        # Bar chart AE vs CP par pilier
+
         fig_bar = go.Figure()
         fig_bar.add_trace(go.Bar(
             name='AE',
@@ -1690,13 +1591,10 @@ def update_budget_charts(year):
             xaxis_title="Pilier SND30",
             yaxis_title="Montant (Milliards FCFA)"
         )
-        
-        # Top 15 programmes
+
         top_15 = budget_df.nlargest(15, 'ae').copy()
-        
-        # Vérifier si la colonne pilier_dominant existe
+
         if 'pilier_dominant' in top_15.columns:
-            # Utiliser les noms courts pour l'affichage
             top_15['pilier_label'] = top_15['pilier_dominant'].map(map_pilier_label)
             fig_top = px.bar(
                 top_15,
@@ -1709,7 +1607,6 @@ def update_budget_charts(year):
                 height=600
             )
         else:
-            # Si pas de colonne pilier, graphique simple
             fig_top = px.bar(
                 top_15,
                 y='programme',
@@ -1720,13 +1617,13 @@ def update_budget_charts(year):
                 height=600,
                 color_discrete_sequence=['steelblue']
             )
-        
+
         fig_top.update_layout(
             yaxis={'categoryorder': 'total ascending'},
             xaxis_title="Montant AE (FCFA)",
             yaxis_title="Programme"
         )
-        
+
         return fig_pie, fig_bar, fig_top
     except Exception as e:
         print(f"Erreur dans update_budget_charts: {e}")
@@ -1742,11 +1639,10 @@ def update_budget_evolution(year):
     try:
         if 'comparison' not in DATA or DATA['comparison'] is None:
             return go.Figure()
-        
+
         comparison = DATA['comparison']
-        
+
         fig = go.Figure()
-        
         fig.add_trace(go.Bar(
             name='2024',
             x=comparison.index,
@@ -1755,7 +1651,6 @@ def update_budget_evolution(year):
             text=[f"{v/1e9:.2f}" for v in comparison['ae_2024']],
             textposition='outside'
         ))
-        
         fig.add_trace(go.Bar(
             name='2025',
             x=comparison.index,
@@ -1764,7 +1659,6 @@ def update_budget_evolution(year):
             text=[f"{v/1e9:.2f}" for v in comparison['ae_2025']],
             textposition='outside'
         ))
-        
         fig.update_layout(
             title="Évolution des AE par Pilier 2024 → 2025 (Milliards FCFA)",
             barmode='group',
@@ -1772,7 +1666,7 @@ def update_budget_evolution(year):
             yaxis_title="Montant AE (Milliards FCFA)",
             height=500
         )
-        
+
         return fig
     except Exception as e:
         print(f"Erreur dans update_budget_evolution: {e}")
@@ -1805,11 +1699,10 @@ def create_classification_year_content(year):
     try:
         if f'budget_{year}' not in DATA or f'piliers_{year}' not in DATA:
             return dbc.Alert(f"Données {year} non disponibles", color="warning")
-        
+
         budget_df = DATA[f'budget_{year}']
         piliers_df = DATA[f'piliers_{year}']
-        
-        # Graphique en barres
+
         piliers_reset = piliers_df.reset_index()
         piliers_reset.columns = ['pilier'] + list(piliers_reset.columns[1:])
         fig_bar = px.bar(
@@ -1822,12 +1715,10 @@ def create_classification_year_content(year):
             color_discrete_map={'ae': 'steelblue', 'cp': 'lightcoral'}
         )
         fig_bar.update_layout(height=500)
-        
-        # Distribution des scores (si disponibles)
+
         score_cols = [col for col in budget_df.columns if col.startswith('score_')]
-        
+
         if score_cols:
-            # Boxplot des scores
             score_data = []
             for col in score_cols:
                 pilier = col.replace('score_', '')
@@ -1835,7 +1726,7 @@ def create_classification_year_content(year):
                     'Pilier': pilier,
                     'Scores': budget_df[col].tolist()
                 })
-            
+
             fig_box = go.Figure()
             for item in score_data:
                 fig_box.add_trace(go.Box(
@@ -1843,21 +1734,18 @@ def create_classification_year_content(year):
                     name=item['Pilier'],
                     boxmean='sd'
                 ))
-            
             fig_box.update_layout(
                 title=f"Distribution des Scores de Classification - {year}",
                 yaxis_title="Score de probabilité",
                 height=500
             )
-            
             boxplot_section = dcc.Graph(figure=fig_box)
         else:
             boxplot_section = dbc.Alert("Scores de classification non disponibles", color="warning")
-        
+
         return html.Div([
             dbc.Row([
                 dbc.Col([
-                    # Statistiques
                     dbc.Card([
                         dbc.CardHeader(html.H5(f"Statistiques {year}")),
                         dbc.CardBody([
@@ -1882,9 +1770,8 @@ def create_classification_year_content(year):
                         ])
                     ])
                 ], md=4),
-                
+
                 dbc.Col([
-                    # Pie chart
                     dcc.Graph(
                         figure=px.pie(
                             piliers_reset,
@@ -1897,7 +1784,7 @@ def create_classification_year_content(year):
                     )
                 ], md=8),
             ], className="mb-4"),
-            
+
             dcc.Graph(figure=fig_bar),
             html.Hr(),
             boxplot_section,
@@ -1912,29 +1799,22 @@ def create_classification_comparison_content():
     try:
         if 'comparison' not in DATA:
             return dbc.Alert("Données de comparaison non disponibles", color="warning")
-        
+
         comparison = DATA['comparison']
-        
+
         fig = go.Figure()
-        
-        piliers = comparison.index
-        x = np.arange(len(piliers))
-        width = 0.35
-        
         fig.add_trace(go.Bar(
             name='2024',
-            x=piliers,
+            x=comparison.index,
             y=comparison['ae_2024'] / 1e9,
             marker_color='lightblue'
         ))
-        
         fig.add_trace(go.Bar(
             name='2025',
-            x=piliers,
+            x=comparison.index,
             y=comparison['ae_2025'] / 1e9,
             marker_color='darkblue'
         ))
-        
         fig.update_layout(
             title="Comparaison AE 2024 vs 2025 par Pilier (Milliards FCFA)",
             barmode='group',
@@ -1942,7 +1822,7 @@ def create_classification_comparison_content():
             yaxis_title="Montant AE (Milliards FCFA)",
             height=500
         )
-        
+
         return html.Div([
             dcc.Graph(figure=fig),
             html.Hr(),
@@ -1969,17 +1849,15 @@ def create_classification_comparison_content():
 def update_barometer_charts(pathname):
     """Met à jour les graphiques du baromètre."""
     try:
-        if ('comparison' not in DATA or 'piliers_2024' not in DATA or 
-            'piliers_2025' not in DATA):
+        if ('comparison' not in DATA or 'piliers_2024' not in DATA or
+                'piliers_2025' not in DATA):
             return go.Figure(), go.Figure(), go.Figure()
-        
+
         comparison = DATA['comparison']
         piliers_2024 = DATA['piliers_2024']
         piliers_2025 = DATA['piliers_2025']
-        
-        # Évolution par pilier
+
         fig_evol = go.Figure()
-        
         fig_evol.add_trace(go.Scatter(
             x=comparison.index,
             y=comparison['ae_2024'] / 1e9,
@@ -1988,7 +1866,6 @@ def update_barometer_charts(pathname):
             line=dict(color='lightblue', width=3),
             marker=dict(size=10)
         ))
-        
         fig_evol.add_trace(go.Scatter(
             x=comparison.index,
             y=comparison['ae_2025'] / 1e9,
@@ -1997,17 +1874,15 @@ def update_barometer_charts(pathname):
             line=dict(color='darkblue', width=3),
             marker=dict(size=10)
         ))
-        
         fig_evol.update_layout(
             title="Évolution des AE par Pilier (Milliards FCFA)",
             xaxis_title="Pilier SND30",
             yaxis_title="Montant AE (Milliards FCFA)",
             height=400
         )
-        
-        # Concentration 2024
+
         _p24 = piliers_2024.reset_index()
-        _path_col_24 = _p24.columns[0]  # 'pilier' ou 'index' selon la source
+        _path_col_24 = _p24.columns[0]
         fig_conc_2024 = px.treemap(
             _p24,
             path=[_path_col_24],
@@ -2018,7 +1893,6 @@ def update_barometer_charts(pathname):
         )
         fig_conc_2024.update_layout(height=400)
 
-        # Concentration 2025
         _p25 = piliers_2025.reset_index()
         _path_col_25 = _p25.columns[0]
         fig_conc_2025 = px.treemap(
@@ -2030,9 +1904,9 @@ def update_barometer_charts(pathname):
             color_continuous_scale='Blues'
         )
         fig_conc_2025.update_layout(height=400)
-        
+
         return fig_evol, fig_conc_2024, fig_conc_2025
-    
+
     except Exception as e:
         print(f"Erreur dans update_barometer_charts: {e}")
         return go.Figure(), go.Figure(), go.Figure()
@@ -2056,37 +1930,27 @@ def update_barometer_umap(selected_years, selected_clusters, selected_titles):
     fig = go.Figure()
     fig_clusters = go.Figure()
 
+    def _empty_fig(msg: str) -> go.Figure:
+        f = go.Figure()
+        f.add_annotation(text=msg, xref="paper", yref="paper", x=0.5, y=0.5,
+                         showarrow=False, font=dict(size=14))
+        f.update_xaxes(visible=False)
+        f.update_yaxes(visible=False)
+        return f
+
     if "umap_df" not in DATA or not isinstance(DATA["umap_df"], pd.DataFrame) or DATA["umap_df"].empty:
         msg = "Embeddings/UMAP non disponibles (vérifiez `outputs/models/embeddings_2024.npy` et `embeddings_2025.npy`)."
         if "umap_error" in DATA:
             msg += f" Détail: {DATA['umap_error']}"
-        fig.add_annotation(
-            text=msg,
-            xref="paper",
-            yref="paper",
-            x=0.5,
-            y=0.5,
-            showarrow=False,
-            font=dict(size=14),
+        return (
+            _empty_fig(msg),
+            [],
+            [],
+            _empty_fig("Clusters K-Means non disponibles (pas de données UMAP)."),
         )
-        fig.update_xaxes(visible=False)
-        fig.update_yaxes(visible=False)
-        fig_clusters.add_annotation(
-            text="Clusters K-Means non disponibles (pas de données UMAP).",
-            xref="paper",
-            yref="paper",
-            x=0.5,
-            y=0.5,
-            showarrow=False,
-            font=dict(size=14),
-        )
-        fig_clusters.update_xaxes(visible=False)
-        fig_clusters.update_yaxes(visible=False)
-        return fig, [], [], fig_clusters
 
     df = DATA["umap_df"].copy()
 
-    # options statiques pour les dropdowns (à partir de toutes les données)
     cluster_options = []
     if "cluster_kmeans" in df.columns:
         cluster_options = [
@@ -2101,42 +1965,22 @@ def update_barometer_umap(selected_years, selected_clusters, selected_titles):
             for t in sorted(df["titre"].dropna().unique())
         ]
 
-    # Filtres
     if selected_years:
         df = df[df["annee"].isin(selected_years)]
-
     if selected_clusters and "cluster_kmeans" in df.columns:
         df = df[df["cluster_kmeans"].isin(selected_clusters)]
-
     if selected_titles and "titre" in df.columns:
         df = df[df["titre"].isin(selected_titles)]
 
-    hover_cols = [c for c in ["id", "titre", "chapitre", "dominant_topic", "cluster_kmeans"] if c in df.columns]
-
     if df.empty:
-        fig.add_annotation(
-            text="Aucun point ne correspond aux filtres sélectionnés.",
-            xref="paper",
-            yref="paper",
-            x=0.5,
-            y=0.5,
-            showarrow=False,
-            font=dict(size=14),
+        return (
+            _empty_fig("Aucun point ne correspond aux filtres sélectionnés."),
+            cluster_options,
+            title_options,
+            _empty_fig("Aucune donnée de cluster pour les filtres sélectionnés."),
         )
-        fig.update_xaxes(visible=False)
-        fig.update_yaxes(visible=False)
-        fig_clusters.add_annotation(
-            text="Aucune donnée de cluster pour les filtres sélectionnés.",
-            xref="paper",
-            yref="paper",
-            x=0.5,
-            y=0.5,
-            showarrow=False,
-            font=dict(size=14),
-        )
-        fig_clusters.update_xaxes(visible=False)
-        fig_clusters.update_yaxes(visible=False)
-        return fig, cluster_options, title_options, fig_clusters
+
+    hover_cols = [c for c in ["id", "titre", "chapitre", "dominant_topic", "cluster_kmeans"] if c in df.columns]
 
     fig = px.scatter(
         df,
@@ -2149,7 +1993,6 @@ def update_barometer_umap(selected_years, selected_clusters, selected_titles):
     fig.update_traces(marker=dict(size=8, opacity=0.65))
     fig.update_layout(height=650, legend_title_text="Année")
 
-    # Distribution des clusters K-Means par année
     if "cluster_kmeans" in df.columns:
         cluster_summary = (
             df.dropna(subset=["cluster_kmeans"])
@@ -2158,7 +2001,6 @@ def update_barometer_umap(selected_years, selected_clusters, selected_titles):
               .reset_index(name="nb_articles")
         )
         if not cluster_summary.empty:
-            # S'assurer que les clusters sont bien triés et affichés comme catégories
             cluster_summary["cluster_kmeans"] = cluster_summary["cluster_kmeans"].astype(int)
             cluster_summary["cluster_label"] = cluster_summary["cluster_kmeans"].apply(
                 lambda c: f"Cluster {c}"
@@ -2177,29 +2019,9 @@ def update_barometer_umap(selected_years, selected_clusters, selected_titles):
                 height=450,
             )
         else:
-            fig_clusters.add_annotation(
-                text="Aucune donnée de cluster après filtrage.",
-                xref="paper",
-                yref="paper",
-                x=0.5,
-                y=0.5,
-                showarrow=False,
-                font=dict(size=14),
-            )
-            fig_clusters.update_xaxes(visible=False)
-            fig_clusters.update_yaxes(visible=False)
+            fig_clusters = _empty_fig("Aucune donnée de cluster après filtrage.")
     else:
-        fig_clusters.add_annotation(
-            text="Colonnes de clusters K-Means non disponibles dans les données UMAP.",
-            xref="paper",
-            yref="paper",
-            x=0.5,
-            y=0.5,
-            showarrow=False,
-            font=dict(size=14),
-        )
-        fig_clusters.update_xaxes(visible=False)
-        fig_clusters.update_yaxes(visible=False)
+        fig_clusters = _empty_fig("Colonnes de clusters K-Means non disponibles dans les données UMAP.")
 
     return fig, cluster_options, title_options, fig_clusters
 
@@ -2217,21 +2039,11 @@ def update_barometer_umap(selected_years, selected_clusters, selected_titles):
 )
 def update_barometer_objectifs(year_value: str):
     """Baromètre objectifs: wordclouds par pilier + répartition (pie/bar)."""
-    # Figures par défaut (messages)
-    fig_pie = go.Figure()
-    fig_bar = go.Figure()
 
     def _msg_fig(text: str) -> go.Figure:
         f = go.Figure()
-        f.add_annotation(
-            text=text,
-            xref="paper",
-            yref="paper",
-            x=0.5,
-            y=0.5,
-            showarrow=False,
-            font=dict(size=14),
-        )
+        f.add_annotation(text=text, xref="paper", yref="paper", x=0.5, y=0.5,
+                         showarrow=False, font=dict(size=14))
         f.update_xaxes(visible=False)
         f.update_yaxes(visible=False)
         return f
@@ -2248,38 +2060,29 @@ def update_barometer_objectifs(year_value: str):
             if key in DATA and isinstance(DATA[key], pd.DataFrame):
                 df_parts.append(DATA[key])
 
+    empty_img = f"data:image/png;base64,{create_wordcloud('')}"
+
     if not df_parts:
-        empty_img = f"data:image/png;base64,{create_wordcloud('')}"
         return (
             _msg_fig("Données objectifs non disponibles. Exécutez le pipeline pour générer `objectifs_classifications_snd30_*.xlsx`."),
             _msg_fig("Données objectifs non disponibles."),
-            empty_img,
-            empty_img,
-            empty_img,
-            empty_img,
+            empty_img, empty_img, empty_img, empty_img,
         )
 
     df = pd.concat(df_parts, ignore_index=True).copy()
 
-    # Colonnes attendues
     objectif_col = "objectif" if "objectif" in df.columns else None
     pilier_col = "pilier_dominant" if "pilier_dominant" in df.columns else None
     if not objectif_col or not pilier_col:
-        empty_img = f"data:image/png;base64,{create_wordcloud('')}"
         return (
             _msg_fig("Colonnes manquantes dans les données objectifs (attendu: `objectif`, `pilier_dominant`)."),
             _msg_fig("Colonnes manquantes dans les données objectifs."),
-            empty_img,
-            empty_img,
-            empty_img,
-            empty_img,
+            empty_img, empty_img, empty_img, empty_img,
         )
 
-    # Nettoyage + stopwords (réutilise les stopwords du projet)
     prep = TextPreprocessor(lower=True, rm_accents=True)
     df["_objectif_clean"] = df[objectif_col].fillna("").astype(str).apply(prep.preprocess)
 
-    # Répartition par pilier (pie + bar)
     counts = (
         df[pilier_col]
         .fillna("Inconnu")
@@ -2309,7 +2112,6 @@ def update_barometer_objectifs(year_value: str):
     fig_bar.update_layout(height=450, xaxis_title="Pilier", yaxis_title="Nombre d'objectifs")
     fig_bar.update_traces(textposition="outside")
 
-    # Wordclouds (ordre PILIERS_SND30)
     wc_srcs: list[str] = []
     for pilier in PILIERS_SND30:
         cache_key = (str(year_value), str(pilier))
@@ -2322,11 +2124,11 @@ def update_barometer_objectifs(year_value: str):
             _BAROMETER_WC_CACHE[cache_key] = img_b64
         wc_srcs.append(f"data:image/png;base64,{img_b64}")
 
-    # Sécurité si liste inattendue
     while len(wc_srcs) < 4:
-        wc_srcs.append(f"data:image/png;base64,{create_wordcloud('')}")
+        wc_srcs.append(empty_img)
 
     return fig_pie, fig_bar, wc_srcs[0], wc_srcs[1], wc_srcs[2], wc_srcs[3]
+
 
 # Callbacks pour Stats
 @app.callback(
@@ -2347,40 +2149,33 @@ def create_stats_descriptives():
     """Statistiques descriptives."""
     budget_2024 = DATA['budget_2024']
     budget_2025 = DATA['budget_2025']
-    
-    # Stats 2024
+
     stats_2024 = budget_2024[['ae', 'cp']].describe()
-    
-    # Stats 2025
     stats_2025 = budget_2025[['ae', 'cp']].describe()
-    
+
     return html.Div([
         html.H3("📊 Statistiques Descriptives", className="mb-4"),
-        
+
         dbc.Row([
             dbc.Col([
                 html.H5("2024", className="text-center"),
                 dbc.Table.from_dataframe(
                     stats_2024.reset_index().round(2),
-                    striped=True,
-                    bordered=True,
-                    hover=True
+                    striped=True, bordered=True, hover=True
                 )
             ], md=6),
-            
+
             dbc.Col([
                 html.H5("2025", className="text-center"),
                 dbc.Table.from_dataframe(
                     stats_2025.reset_index().round(2),
-                    striped=True,
-                    bordered=True,
-                    hover=True
+                    striped=True, bordered=True, hover=True
                 )
             ], md=6),
         ]),
-        
+
         html.Hr(),
-        
+
         html.H4("Résumé", className="mb-3"),
         dbc.Alert([
             html.Ul([
@@ -2398,7 +2193,6 @@ def create_stats_tests():
     budget_2024 = DATA['budget_2024']
     budget_2025 = DATA['budget_2025']
 
-    # Calcul basique de comparaison
     mean_diff_ae = budget_2025['ae'].mean() - budget_2024['ae'].mean()
     mean_diff_cp = budget_2025['cp'].mean() - budget_2024['cp'].mean()
 
@@ -2433,9 +2227,7 @@ def create_stats_tests():
             html.H5("Test de Mann-Whitney sur les distributions de probabilités de topics", className="mb-3"),
             dbc.Table.from_dataframe(
                 mw_df.round(4),
-                striped=True,
-                bordered=True,
-                hover=True
+                striped=True, bordered=True, hover=True
             )
         ])
 
@@ -2465,40 +2257,39 @@ def create_stats_distributions():
     """Visualisation des distributions."""
     budget_2024 = DATA['budget_2024']
     budget_2025 = DATA['budget_2025']
-    
-    # Histogrammes
+
     fig_hist = make_subplots(
         rows=1, cols=2,
         subplot_titles=("Distribution AE 2024", "Distribution AE 2025")
     )
-    
+
     fig_hist.add_trace(
         go.Histogram(x=budget_2024['ae']/1e6, name='2024', marker_color='lightblue'),
         row=1, col=1
     )
-    
     fig_hist.add_trace(
         go.Histogram(x=budget_2025['ae']/1e6, name='2025', marker_color='darkblue'),
         row=1, col=2
     )
-    
+
     fig_hist.update_xaxes(title_text="AE (Millions FCFA)", row=1, col=1)
     fig_hist.update_xaxes(title_text="AE (Millions FCFA)", row=1, col=2)
     fig_hist.update_yaxes(title_text="Fréquence", row=1, col=1)
-    
     fig_hist.update_layout(height=500, showlegend=False)
-    
+
     return html.Div([
         html.H3("📉 Distributions des Montants", className="mb-4"),
         dcc.Graph(figure=fig_hist),
-        
+
         html.Hr(),
-        
+
         html.H4("Observations", className="mb-3"),
         dbc.Alert([
-            html.P("Les distributions montrent une concentration importante des lignes budgétaires " +
-                   "sur des montants faibles, avec quelques lignes à très fort montant (dette, infrastructures).",
-                   className="mb-0")
+            html.P(
+                "Les distributions montrent une concentration importante des lignes budgétaires "
+                "sur des montants faibles, avec quelques lignes à très fort montant (dette, infrastructures).",
+                className="mb-0"
+            )
         ], color="info")
     ])
 
@@ -2507,3 +2298,5 @@ def create_stats_distributions():
 # LANCEMENT DE L'APPLICATION
 # ══════════════════════════════════════════════════════════════════════════════
 
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=8050)
