@@ -1437,16 +1437,20 @@ def update_obj_art_barometer(year_value: str, objectif_id: int):
     # Résumé de l'objectif sélectionné
     pilier_dom = row.get("pilier_dominant", "N/A")
     score_dom = row.get("score_pilier_dominant", None)
+    # Construction du résumé de l'objectif sélectionné sans concaténer directement
+    # des composants Dash avec des chaînes de caractères.
+    if isinstance(score_dom, (int, float)):
+        score_children = [html.B("Score pilier dominant : "), f"{float(score_dom):.3f}"]
+    else:
+        score_children = [html.B("Score pilier dominant : "), html.Span("N/A")]
+
     summary = dbc.Card([
         dbc.CardBody([
             html.P(f"Année : {year_int}", className="mb-1"),
-            html.P(html.B("Programme : ") + str(row.get("programme", "N/A"))),
-            html.P(html.B("Objectif : ") + str(row.get("objectif", "N/A"))),
-            html.P(html.B("Pilier dominant : ") + str(pilier_dom)),
-            html.P(
-                html.B("Score pilier dominant : ") + f"{float(score_dom):.3f}"
-                if isinstance(score_dom, (int, float)) else html.Span("N/A")
-            ),
+            html.P([html.B("Programme : "), str(row.get("programme", "N/A"))]),
+            html.P([html.B("Objectif : "), str(row.get("objectif", "N/A"))]),
+            html.P([html.B("Pilier dominant : "), str(pilier_dom)]),
+            html.P(score_children),
         ])
     ], className="mb-3")
 
