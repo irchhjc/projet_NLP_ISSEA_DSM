@@ -55,7 +55,7 @@ class AuditeurSemantique:
         """
         logger.info("🔢 Calcul de la matrice de similarité cosinus...")
         self._sim_matrix = cosine_similarity(self.embeddings_ref, self.embeddings_comp)
-        logger.info(f"✅ Matrice calculée : {self._sim_matrix.shape}")
+        logger.info(f"Matrice calculée : {self._sim_matrix.shape}")
         return self._sim_matrix
 
     @property
@@ -76,7 +76,7 @@ class AuditeurSemantique:
         article_ref_id, article_comp_id, similarite, rang, texte_ref, texte_comp.
         """
         matrix = self.sim_matrix
-        logger.info(f"🎯 Recherche des {top_k} meilleures correspondances...")
+        logger.info(f"Recherche des {top_k} meilleures correspondances...")
         resultats = []
 
         for i in range(len(self.df_ref)):
@@ -101,7 +101,7 @@ class AuditeurSemantique:
                 )
 
         df_matches = pd.DataFrame(resultats)
-        logger.info(f"✅ {len(df_matches)} correspondances trouvées.")
+        logger.info(f"{len(df_matches)} correspondances trouvées.")
         return df_matches
 
     # ── Analyse du glissement ─────────────────────────────────────────────────
@@ -143,7 +143,7 @@ class AuditeurSemantique:
         )
 
         logger.info("=" * 60)
-        logger.info("📊 ANALYSE DU GLISSEMENT SÉMANTIQUE")
+        logger.info("ANALYSE DU GLISSEMENT SÉMANTIQUE")
         logger.info(f"  • Similarité moyenne : {moyenne:.3f}")
         logger.info(f"  • Score de glissement : {score_gliss:.3f} ({interpretation})")
         logger.info(f"  • Articles avec changements significatifs : {nb_chgt} ({pct_chgt:.1f}%)")

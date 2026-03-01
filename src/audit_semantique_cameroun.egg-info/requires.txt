@@ -22,3 +22,4 @@ dash<5.0.0,>=4.0.0
 dash-bootstrap-components<3.0.0,>=2.0.4
 wordcloud<2.0.0,>=1.9.6
 pillow<13.0.0,>=12.1.1
+spacy<4.0.0,>=3.8.11

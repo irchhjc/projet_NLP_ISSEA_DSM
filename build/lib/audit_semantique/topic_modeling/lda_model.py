@@ -63,7 +63,7 @@ class LDATopicModeler:
         tokenized_docs : List[List[str]]
             Liste de documents tokenisés.
         """
-        logger.info("📚 Construction du dictionnaire LDA...")
+        logger.info("Construction du dictionnaire LDA...")
         self.dictionary = Dictionary(tokenized_docs)
         self.dictionary.filter_extremes(no_below=self.no_below, no_above=self.no_above)
         self.corpus = [self.dictionary.doc2bow(doc) for doc in tokenized_docs]
@@ -87,7 +87,7 @@ class LDATopicModeler:
             random_state=self.random_state,
             passes=self.passes,
         )
-        logger.info("✅ Modèle LDA entraîné.")
+        logger.info("Modèle LDA entraîné.")
         return self
 
     # ── Distribution par document ─────────────────────────────────────────────
@@ -170,10 +170,10 @@ class LDATopicModeler:
             import pickle
             with open(corpus_path, "rb") as f:
                 obj.corpus = pickle.load(f)
-            logger.info(f"📂 Modèle LDA + corpus chargé depuis {base}.lda")
+            logger.info(f"Modèle LDA + corpus chargé depuis {base}.lda")
         else:
-            logger.warning(f"⚠️  Corpus non trouvé. Utilisez get_doc_topic_matrix(tokenized_docs=...)")
-            logger.info(f"📂 Modèle LDA chargé depuis {base}.lda")
+            logger.warning("Corpus non trouvé. Utilisez get_doc_topic_matrix(tokenized_docs=...)")
+            logger.info(f"Modèle LDA chargé depuis {base}.lda")
         
         return obj
 
@@ -200,5 +200,5 @@ class LDATopicModeler:
         logger.info(f"🎨 Génération pyLDAvis → {out_path}...")
         vis = gensimvis.prepare(self.model, self.corpus, self.dictionary)
         pyLDAvis.save_html(vis, out_path)
-        logger.info("✅ Visualisation LDA sauvegardée.")
+        logger.info("Visualisation LDA sauvegardée.")
         return out_path

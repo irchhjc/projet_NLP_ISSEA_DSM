@@ -157,7 +157,11 @@ def load_all_data():
     for year in [2024, 2025]:
         f = REPORTS_DIR / f"objectifs_classifications_snd30_{year}.xlsx"
         if f.exists():
-            data[f'objectifs_classifications_{year}'] = pd.read_excel(f)
+            df = pd.read_excel(f)
+            # Ajouter l'année si absente (rétro‑compatibilité)
+            if "annee" not in df.columns:
+                df["annee"] = year
+            data[f"objectifs_classifications_{year}"] = df
 
     # Rétro-compatibilité : fusion des deux années si disponibles
     if 'objectifs_classifications_2024' in data and 'objectifs_classifications_2025' in data:
@@ -200,7 +204,7 @@ def load_all_data():
         if f.exists():
             data[key] = pd.read_excel(f)
 
-    # Embeddings (vecteurs) + UMAP (projection 2D)
+    # Embeddings (vecteurs d'articles) + UMAP (projection 2D)
     emb_file_2024 = MODELS_DIR / "embeddings_2024.npy"
     emb_file_2025 = MODELS_DIR / "embeddings_2025.npy"
     if emb_file_2024.exists() and emb_file_2025.exists():
@@ -335,6 +339,15 @@ def load_all_data():
         except Exception as e:
             data["embeddings_error"] = str(e)
 
+    # Embeddings des objectifs budgétaires (par année)
+    for year in [2024, 2025]:
+        emb_obj_path = MODELS_DIR / f"embeddings_objectifs_{year}.npy"
+        if emb_obj_path.exists():
+            try:
+                data[f"emb_objectifs_{year}"] = np.load(emb_obj_path)
+            except Exception as e:
+                data.setdefault("embeddings_objectifs_error", {})[str(year)] = str(e)
+
     return data
 
 
@@ -423,9 +436,47 @@ def extract_topic_words(topic_id, df_topics):
 
 
 def get_cluster_texts(df, cluster_id):
-    """Récupère tous les textes d'un cluster donné."""
-    cluster_articles = df[df['cluster_kmeans'] == cluster_id]
-    return ' '.join(cluster_articles['content'].fillna('').astype(str).tolist())
+    """Récupère un texte agrégé nettoyé pour un cluster donné.
+
+    Priorité :
+    1) Colonnes déjà nettoyées (cleaned_title / cleaned_content) produites par le pipeline.
+    2) À défaut, nettoyage à la volée de la colonne `content` avec TextPreprocessor.
+    """
+    cluster_articles = df[df["cluster_kmeans"] == cluster_id]
+    if cluster_articles.empty:
+        return ""
+
+    texts: list[str] = []
+
+    # 1) Utiliser les colonnes nettoyées si présentes (aligné avec les embeddings)
+    has_clean_title = "cleaned_title" in cluster_articles.columns
+    has_clean_content = "cleaned_content" in cluster_articles.columns
+    if has_clean_title or has_clean_content:
+        for _, row in cluster_articles.iterrows():
+            parts: list[str] = []
+            if has_clean_title:
+                parts.append(str(row.get("cleaned_title", "")))
+            if has_clean_content:
+                parts.append(str(row.get("cleaned_content", "")))
+            txt = " ".join(p for p in parts if p).strip()
+            if txt:
+                texts.append(txt)
+
+        if texts:
+            return " ".join(texts)
+
+    # 2) Fallback : nettoyer `content` à la volée si disponible
+    if "content" in cluster_articles.columns:
+        prep = TextPreprocessor(lower=True, rm_accents=True)
+        cleaned_series = (
+            cluster_articles["content"]
+            .fillna("")
+            .astype(str)
+            .apply(prep.preprocess)
+        )
+        return " ".join(cleaned_series.tolist())
+
+    return ""
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -454,29 +505,29 @@ sidebar = html.Div([
             src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Flag_of_Cameroon.svg/320px-Flag_of_Cameroon.svg.png",
             style={'width': '100px', 'margin': '20px auto', 'display': 'block'}
         ),
-        html.H3("🇨🇲 Audit Sémantique", className="text-center text-white"),
+        html.H3("Audit Sémantique", className="text-center text-white"),
         html.P("Loi de Finances du Cameroun", className="text-center text-white-50"),
         html.P("ISE3-DS | ISSEA Yaoundé | 2025-2026", className="text-center text-white-50 small"),
-    ], style={'padding': '20px'}),
+    ], style={'padding': '20px'}, className="sidebar-header"),
 
     html.Hr(style={'borderColor': 'rgba(255,255,255,0.2)'}),
 
     dbc.Nav([
         dbc.NavLink([html.I(className="fas fa-home me-2"), "Accueil"],
-                    href="/", active="exact", className="text-white"),
+                    href="/", active="exact", className="text-white sidebar-link"),
         dbc.NavLink([html.I(className="fas fa-chart-line me-2"), "Baromètre"],
-                    href="/barometer", active="exact", className="text-white"),
+                    href="/barometer", active="exact", className="text-white sidebar-link"),
         dbc.NavLink([html.I(className="fas fa-tags me-2"), "Classification SND30"],
-                    href="/classification", active="exact", className="text-white"),
+                    href="/classification", active="exact", className="text-white sidebar-link"),
         dbc.NavLink([html.I(className="fas fa-brain me-2"), "Topic Modeling"],
-                    href="/topics", active="exact", className="text-white"),
+                    href="/topics", active="exact", className="text-white sidebar-link"),
         dbc.NavLink([html.I(className="fas fa-project-diagram me-2"), "Clustering"],
-                    href="/clustering", active="exact", className="text-white"),
+                    href="/clustering", active="exact", className="text-white sidebar-link"),
         dbc.NavLink([html.I(className="fas fa-money-bill-wave me-2"), "Analyse Budgétaire"],
-                    href="/budget", active="exact", className="text-white"),
+                    href="/budget", active="exact", className="text-white sidebar-link"),
         dbc.NavLink([html.I(className="fas fa-chart-bar me-2"), "Tests Statistiques"],
-                    href="/stats", active="exact", className="text-white"),
-    ], vertical=True, pills=True),
+                    href="/stats", active="exact", className="text-white sidebar-link"),
+    ], vertical=True, pills=True, class_name="sidebar-nav"),
 
     html.Hr(style={'borderColor': 'rgba(255,255,255,0.2)', 'marginTop': '20px'}),
 
@@ -486,7 +537,7 @@ sidebar = html.Div([
         html.P("• Analyse budgétaire AE/CP", className="text-white-50 small mb-0"),
         html.P("• Visualisations Dash/Plotly", className="text-white-50 small mb-0"),
     ], style={'padding': '0 20px'}),
-], style={
+], className="sidebar", style={
     'position': 'fixed',
     'top': 0,
     'left': 0,
@@ -500,6 +551,7 @@ sidebar = html.Div([
 # Content
 content = html.Div(
     id="page-content",
+    className="content-area",
     style={
         'marginLeft': '280px',
         'padding': '30px',
@@ -511,7 +563,7 @@ app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
     sidebar,
     content
-])
+], className="app-layout")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -521,10 +573,10 @@ app.layout = html.Div([
 def create_home_page():
     """Page d'accueil."""
     return html.Div([
-        html.H1("🇨🇲 Audit Sémantique des Lois de Finances du Cameroun", className="mb-4"),
+        html.H1("Audit Sémantique des Lois de Finances du Cameroun", className="mb-4"),
 
         dbc.Alert([
-            html.H4("📊 Dashboard Interactif d'Analyse Sémantique et Budgétaire", className="alert-heading"),
+            html.H4("Dashboard Interactif d'Analyse Sémantique et Budgétaire", className="alert-heading"),
             html.P("Analyse comparative des lois de finances 2024 et 2025 du Cameroun selon les piliers de la SND30"),
         ], color="info"),
 
@@ -532,54 +584,54 @@ def create_home_page():
             dbc.Col([
                 dbc.Card([
                     dbc.CardBody([
-                        html.H3("📈", className="text-center"),
+                        html.H3("", className="text-center"),
                         html.H5("Baromètre", className="text-center"),
                         html.P("Glissement sémantique et distances", className="text-center small"),
                     ])
-                ], className="mb-3 shadow-sm")
+                ], className="mb-3 shadow-sm kpi-card")
             ], md=3),
 
             dbc.Col([
                 dbc.Card([
                     dbc.CardBody([
-                        html.H3("🏷️", className="text-center"),
+                        html.H3("", className="text-center"),
                         html.H5("Classification SND30", className="text-center"),
                         html.P("Répartition par piliers stratégiques", className="text-center small"),
                     ])
-                ], className="mb-3 shadow-sm")
+                ], className="mb-3 shadow-sm kpi-card")
             ], md=3),
 
             dbc.Col([
                 dbc.Card([
                     dbc.CardBody([
-                        html.H3("🧠", className="text-center"),
+                        html.H3("", className="text-center"),
                         html.H5("Topic Modeling", className="text-center"),
                         html.P("Thématiques latentes (LDA)", className="text-center small"),
                     ])
-                ], className="mb-3 shadow-sm")
+                ], className="mb-3 shadow-sm kpi-card")
             ], md=3),
 
             dbc.Col([
                 dbc.Card([
                     dbc.CardBody([
-                        html.H3("💰", className="text-center"),
+                        html.H3("", className="text-center"),
                         html.H5("Budget AE/CP", className="text-center"),
                         html.P("Analyse des dépenses publiques", className="text-center small"),
                     ])
-                ], className="mb-3 shadow-sm")
+                ], className="mb-3 shadow-sm kpi-card")
             ], md=3),
         ]),
 
         html.Hr(className="my-4"),
 
-        html.H3("📖 À propos du projet", className="mb-3"),
+        html.H3("À propos du projet", className="mb-3"),
         html.P("""
         Ce dashboard présente une analyse budgétaire et sémantique des lois de finances du Cameroun pour les années
         2024 et 2025. L'objectif est de mesurer l'alignement des dépenses publiques avec les piliers de la
         Stratégie Nationale de Développement (SND30 2020-2030).
         """),
 
-        html.H4("🎯 Méthodologie", className="mb-2 mt-4"),
+        html.H4("Méthodologie", className="mb-2 mt-4"),
         html.Ul([
             html.Li("Classification des objectifs budgétaires par mots-clés selon les piliers SND30"),
             html.Li("Analyse des Autorisations d'Engagement (AE) et Crédits de Paiement (CP)"),
@@ -588,7 +640,7 @@ def create_home_page():
             html.Li("Statistiques comparatives 2024 vs 2025"),
         ]),
 
-        html.H4("🌟 Piliers SND30", className="mb-2 mt-4"),
+        html.H4("Piliers SND30", className="mb-2 mt-4"),
         dbc.Row([
             dbc.Col([
                 dbc.Badge("Gouvernance", color="primary", className="me-2"),
@@ -610,7 +662,7 @@ def create_home_page():
 
         html.Hr(className="my-4"),
         html.P("Développé par ISE3-DS | ISSEA Yaoundé | 2025-2026", className="text-muted text-center"),
-    ])
+    ], className="page-container page-home")
 
 
 def create_topics_page():
@@ -618,7 +670,7 @@ def create_topics_page():
     if 'lda_topics_2024' not in DATA or 'lda_topics_2025' not in DATA:
         return html.Div([
             dbc.Alert([
-                html.H4("⚠️ Données de topic modeling non disponibles", className="alert-heading"),
+                html.H4("Données de topic modeling non disponibles", className="alert-heading"),
                 html.P("Les analyses LDA n'ont pas été exécutées. Cette page affiche les topics thématiques issus du Topic Modeling."),
                 html.Hr(),
                 html.P("Pour générer ces données, exécutez :", className="mb-2"),
@@ -630,16 +682,16 @@ def create_topics_page():
     topics_2025 = DATA['lda_topics_2025']
 
     return html.Div([
-        html.H1("📚 Topic Modeling - Analyse LDA", className="mb-4"),
+        html.H1("Topic Modeling - Analyse LDA", className="mb-4"),
 
         dbc.Tabs([
-            dbc.Tab(label="📅 2024", tab_id="tab-2024"),
-            dbc.Tab(label="📅 2025", tab_id="tab-2025"),
-            dbc.Tab(label="🔄 Comparaison", tab_id="tab-comparison"),
-        ], id="topics-tabs", active_tab="tab-2024"),
+            dbc.Tab(label="2024", tab_id="tab-2024"),
+            dbc.Tab(label="2025", tab_id="tab-2025"),
+            dbc.Tab(label="Comparaison", tab_id="tab-comparison"),
+        ], id="topics-tabs", active_tab="tab-2024", class_name="page-tabs"),
 
         html.Div(id="topics-content", className="mt-4")
-    ])
+    ], className="page-container page-topics")
 
 
 def create_clustering_page():
@@ -647,7 +699,7 @@ def create_clustering_page():
     if 'articles_clusters_2024' not in DATA or 'articles_clusters_2025' not in DATA:
         return html.Div([
             dbc.Alert([
-                html.H4("⚠️ Données de clustering non disponibles", className="alert-heading"),
+                html.H4("Données de clustering non disponibles", className="alert-heading"),
                 html.P("Les analyses de clustering n'ont pas été exécutées. Cette page affiche les groupes d'articles similaires."),
                 html.Hr(),
                 html.P("Pour générer ces données, exécutez :", className="mb-2"),
@@ -656,22 +708,22 @@ def create_clustering_page():
         ])
 
     return html.Div([
-        html.H1("🔵 Clustering K-Means & HDBSCAN", className="mb-4"),
+        html.H1("Clustering K-Means & HDBSCAN", className="mb-4"),
 
         dbc.Tabs([
-            dbc.Tab(label="📅 2024", tab_id="cluster-2024"),
-            dbc.Tab(label="📅 2025", tab_id="cluster-2025"),
-        ], id="clustering-tabs", active_tab="cluster-2024"),
+            dbc.Tab(label="2024", tab_id="cluster-2024"),
+            dbc.Tab(label="2025", tab_id="cluster-2025"),
+        ], id="clustering-tabs", active_tab="cluster-2024", class_name="page-tabs"),
 
         html.Div(id="clustering-content", className="mt-4")
-    ])
+    ], className="page-container page-clustering")
 
 
 def create_budget_page():
     """Page Analyse Budgétaire."""
     if 'budget_2024' not in DATA or 'budget_2025' not in DATA:
         return html.Div([
-            dbc.Alert("⚠️ Données budgétaires non disponibles. Exécutez: python scripts/analyze_budget.py", color="warning")
+            dbc.Alert("Données budgétaires non disponibles. Exécutez: python scripts/analyze_budget.py", color="warning")
         ])
 
     budget_2024 = DATA['budget_2024']
@@ -686,7 +738,7 @@ def create_budget_page():
     total_cp_2025 = budget_2025['cp'].sum()
 
     return html.Div([
-        html.H1("💰 Analyse Budgétaire AE/CP 2024-2025", className="mb-4"),
+        html.H1("Analyse Budgétaire AE/CP 2024-2025", className="mb-4"),
 
         # Métriques globales
         dbc.Row([
@@ -697,7 +749,7 @@ def create_budget_page():
                         html.H4(f"{total_ae_2024/1e9:.2f} Mds FCFA"),
                         html.Small(f"+{(total_ae_2025/total_ae_2024-1)*100:.1f}% vs 2025", className="text-success"),
                     ])
-                ])
+                ], className="kpi-card shadow-sm")
             ], md=3),
             dbc.Col([
                 dbc.Card([
@@ -706,7 +758,7 @@ def create_budget_page():
                         html.H4(f"{total_cp_2024/1e9:.2f} Mds FCFA"),
                         html.Small(f"+{(total_cp_2025/total_cp_2024-1)*100:.1f}% vs 2025", className="text-success"),
                     ])
-                ])
+                ], className="kpi-card shadow-sm")
             ], md=3),
             dbc.Col([
                 dbc.Card([
@@ -715,7 +767,7 @@ def create_budget_page():
                         html.H4(f"{total_ae_2025/1e9:.2f} Mds FCFA"),
                         html.Small(f"+{(total_ae_2025-total_ae_2024)/1e9:.2f} Mds", className="text-info"),
                     ])
-                ])
+                ], className="kpi-card shadow-sm")
             ], md=3),
             dbc.Col([
                 dbc.Card([
@@ -724,7 +776,7 @@ def create_budget_page():
                         html.H4(f"{total_cp_2025/1e9:.2f} Mds FCFA"),
                         html.Small(f"+{(total_cp_2025-total_cp_2024)/1e9:.2f} Mds", className="text-info"),
                     ])
-                ])
+                ], className="kpi-card shadow-sm")
             ], md=3),
         ], className="mb-4"),
 
@@ -759,25 +811,25 @@ def create_budget_page():
 
         html.Hr(),
 
-        html.H3("🔝 Top 15 Lignes Budgétaires (AE)", className="mb-3"),
+        html.H3("Top 15 Lignes Budgétaires (AE)", className="mb-3"),
         dcc.Graph(id='budget-top-programs'),
 
         html.Hr(),
 
-        html.H3("📊 Évolution 2024 → 2025 par Pilier", className="mb-3"),
+        html.H3("Évolution 2024 → 2025 par Pilier", className="mb-3"),
         dcc.Graph(id='budget-evolution-chart'),
-    ])
+    ], className="page-container page-budget")
 
 
 def create_classification_page():
     """Page Classification SND30 des objectifs budgétaires."""
     if 'budget_2024' not in DATA or 'budget_2025' not in DATA:
         return html.Div([
-            dbc.Alert("⚠️ Données budgétaires non disponibles", color="warning")
+            dbc.Alert("Données budgétaires non disponibles", color="warning")
         ])
 
     return html.Div([
-        html.H1("🏷️ Classification SND30 des Objectifs Budgétaires", className="mb-4"),
+        html.H1("Classification SND30 des Objectifs Budgétaires", className="mb-4"),
 
         dbc.Alert([
             html.P("Classification des objectifs des lignes budgétaires selon les piliers de la SND30", className="mb-0")
@@ -785,23 +837,23 @@ def create_classification_page():
 
         html.Hr(),
 
-        html.H3("📊 Distribution des Objectifs par Pilier", className="mb-3"),
+        html.H3("Distribution des Objectifs par Pilier", className="mb-3"),
 
         dbc.Tabs([
-            dbc.Tab(label="📅 2024", tab_id="classif-2024"),
-            dbc.Tab(label="📅 2025", tab_id="classif-2025"),
-            dbc.Tab(label="🔄 Comparaison", tab_id="classif-comp"),
-        ], id="classification-tabs", active_tab="classif-2024"),
+            dbc.Tab(label="2024", tab_id="classif-2024"),
+            dbc.Tab(label="2025", tab_id="classif-2025"),
+            dbc.Tab(label="Comparaison", tab_id="classif-comp"),
+        ], id="classification-tabs", active_tab="classif-2024", class_name="page-tabs"),
 
         html.Div(id="classification-content", className="mt-4")
-    ])
+    ], className="page-container page-classification")
 
 
 def create_barometer_page():
     """Page Baromètre avec statistiques budgétaires."""
     if 'budget_2024' not in DATA or 'budget_2025' not in DATA:
         return html.Div([
-            dbc.Alert("⚠️ Données budgétaires non disponibles", color="warning")
+            dbc.Alert("Données budgétaires non disponibles", color="warning")
         ])
 
     budget_2024 = DATA['budget_2024']
@@ -864,7 +916,7 @@ def create_barometer_page():
             nbins=30,
             barmode='overlay',
             marginal='box',
-            title="Distribution des similarités cosinus par année (CamemBERT)",
+            title="Distribution des similarités cosinus par année (embeddings)",
         )
         fig_glissement.update_traces(opacity=0.65)
         fig_glissement.add_vline(
@@ -876,48 +928,48 @@ def create_barometer_page():
         )
 
     return html.Div([
-        html.H1("📊 Baromètre Budgétaire & Sémantique 2024-2025", className="mb-4"),
+        html.H1("Baromètre Budgétaire & Sémantique 2024-2025", className="mb-4"),
 
         # Métriques principales
         dbc.Row([
             dbc.Col([
                 dbc.Card([
                     dbc.CardBody([
-                        html.H6("📈 Croissance AE", className="text-muted"),
+                        html.H6("Croissance AE", className="text-muted"),
                         html.H3(f"+{croissance_ae:.1f}%", className="text-success"),
                         html.P(f"{total_ae_2024/1e9:.2f} → {total_ae_2025/1e9:.2f} Mds", className="small text-muted"),
                     ])
-                ], className="shadow-sm")
+                ], className="shadow-sm kpi-card")
             ], md=3),
 
             dbc.Col([
                 dbc.Card([
                     dbc.CardBody([
-                        html.H6("💰 Croissance CP", className="text-muted"),
+                        html.H6("Croissance CP", className="text-muted"),
                         html.H3(f"+{croissance_cp:.1f}%", className="text-success"),
                         html.P(f"{total_cp_2024/1e9:.2f} → {total_cp_2025/1e9:.2f} Mds", className="small text-muted"),
                     ])
-                ], className="shadow-sm")
+                ], className="shadow-sm kpi-card")
             ], md=3),
 
             dbc.Col([
                 dbc.Card([
                     dbc.CardBody([
-                        html.H6("📄 Lignes Budgétaires", className="text-muted"),
+                        html.H6("Lignes Budgétaires", className="text-muted"),
                         html.H3(f"{n_lignes_2024} / {n_lignes_2025}"),
                         html.P("2024 / 2025", className="small text-muted"),
                     ])
-                ], className="shadow-sm")
+                ], className="shadow-sm kpi-card")
             ], md=3),
 
             dbc.Col([
                 dbc.Card([
                     dbc.CardBody([
-                        html.H6("🎯 Piliers SND30", className="text-muted"),
+                        html.H6("Piliers SND30", className="text-muted"),
                         html.H3("4"),
                         html.P("Axes stratégiques", className="small text-muted"),
                     ])
-                ], className="shadow-sm")
+                ], className="shadow-sm kpi-card")
             ], md=3),
         ], className="mb-4"),
 
@@ -926,13 +978,13 @@ def create_barometer_page():
         dbc.Tabs([
             # ── Onglet Budget & Piliers ───────────────────────────────────────
             dbc.Tab(
-                label="📊 Budget & Piliers",
+                label="Budget & Piliers",
                 children=[
                     html.Br(),
-                    html.H4("📈 Évolution par Pilier SND30", className="mb-3"),
+                    html.H4("Évolution par Pilier SND30", className="mb-3"),
                     dcc.Graph(id='barometer-evolution-piliers'),
                     html.Hr(),
-                    html.H4("🎯 Concentration Budgétaire", className="mb-3"),
+                    html.H4("Concentration Budgétaire", className="mb-3"),
                     dbc.Row([
                         dbc.Col([
                             html.H5("2024"),
@@ -947,7 +999,7 @@ def create_barometer_page():
                     dbc.Accordion(
                         [
                             dbc.AccordionItem(
-                                title="🧾 Baromètre des objectifs (SND30) — Wordclouds & Répartition",
+                                title="Baromètre des objectifs (SND30) — Wordclouds & Répartition",
                                 children=[
                                     dbc.Alert(
                                         "Nuages de mots des objectifs budgétaires par pilier (stopwords supprimés via `TextPreprocessor`).",
@@ -971,15 +1023,15 @@ def create_barometer_page():
                                     ], className="mb-3"),
                                     dbc.Row([
                                         dbc.Col([
-                                            html.H5("🥧 Répartition des objectifs par pilier", className="mb-2"),
+                                            html.H5("Répartition des objectifs par pilier", className="mb-2"),
                                             dcc.Graph(id="barometer-pilier-pie"),
                                         ], md=6),
                                         dbc.Col([
-                                            html.H5("🧮 Nombre d'objectifs par pilier", className="mb-2"),
+                                            html.H5("Nombre d'objectifs par pilier", className="mb-2"),
                                             dcc.Graph(id="barometer-pilier-count-bar"),
                                         ], md=6),
                                     ], className="mb-4"),
-                                    html.H5("☁️ Nuages de mots par pilier (objectifs)", className="mb-3"),
+                                    html.H5("Nuages de mots par pilier (objectifs)", className="mb-3"),
                                     dbc.Row([
                                         dbc.Col([
                                             dbc.Card([
@@ -987,7 +1039,7 @@ def create_barometer_page():
                                                 dbc.CardBody(
                                                     html.Img(id="barometer-wc-pilier-0", style={"width": "100%"})
                                                 ),
-                                            ], className="shadow-sm"),
+                                            ], className="shadow-sm wordcloud-card"),
                                         ], md=6),
                                         dbc.Col([
                                             dbc.Card([
@@ -995,7 +1047,7 @@ def create_barometer_page():
                                                 dbc.CardBody(
                                                     html.Img(id="barometer-wc-pilier-1", style={"width": "100%"})
                                                 ),
-                                            ], className="shadow-sm"),
+                                            ], className="shadow-sm wordcloud-card"),
                                         ], md=6),
                                     ], className="mb-3"),
                                     dbc.Row([
@@ -1005,7 +1057,7 @@ def create_barometer_page():
                                                 dbc.CardBody(
                                                     html.Img(id="barometer-wc-pilier-2", style={"width": "100%"})
                                                 ),
-                                            ], className="shadow-sm"),
+                                            ], className="shadow-sm wordcloud-card"),
                                         ], md=6),
                                         dbc.Col([
                                             dbc.Card([
@@ -1013,7 +1065,7 @@ def create_barometer_page():
                                                 dbc.CardBody(
                                                     html.Img(id="barometer-wc-pilier-3", style={"width": "100%"})
                                                 ),
-                                            ], className="shadow-sm"),
+                                            ], className="shadow-sm wordcloud-card"),
                                         ], md=6),
                                     ]),
                                 ],
@@ -1027,10 +1079,10 @@ def create_barometer_page():
 
             # ── Onglet Glissement sémantique ─────────────────────────────────
             dbc.Tab(
-                label="🧭 Glissement sémantique",
+                label="Glissement sémantique",
                 children=[
                     html.Br(),
-                    html.H4("🧭 Baromètre de glissement sémantique (CamemBERT)", className="mb-3"),
+                    html.H4("Baromètre de glissement sémantique (embeddings)", className="mb-3"),
                     dbc.Row([
                         dbc.Col([
                             dbc.Card([
@@ -1047,7 +1099,7 @@ def create_barometer_page():
                                         className="small text-muted"
                                     ),
                                 ])
-                            ], className="shadow-sm")
+                            ], className="shadow-sm kpi-card")
                         ], md=6),
                         dbc.Col([
                             dbc.Card([
@@ -1064,21 +1116,77 @@ def create_barometer_page():
                                         className="small text-muted"
                                     ),
                                 ])
-                            ], className="shadow-sm")
+                            ], className="shadow-sm kpi-card")
                         ], md=6),
                     ], className="mb-4"),
                     dcc.Graph(figure=fig_glissement),
                 ],
             ),
 
-            # ── Onglet Embeddings UMAP ────────────────────────────────────────
+            # ── Onglet Correspondances objectifs ↔ articles ────────────────
             dbc.Tab(
-                label="🗺️ Embeddings (UMAP)",
+                label="🔗 Objectifs ↔ Articles",
                 children=[
                     html.Br(),
-                    html.H4("🗺️ Visualisation des embeddings (UMAP)", className="mb-3"),
+                    html.H4("🔗 Baromètre objectifs ↔ articles", className="mb-3"),
                     dbc.Alert(
-                        "Projection 2D des vecteurs d'embedding CamemBERT. Survolez un point pour voir l'ID/titre (si disponible).",
+                        "Sélectionnez un objectif budgétaire pour voir les 3 objectifs les plus similaires "
+                        "(avec leurs piliers) et les 2 articles de loi les plus proches dans l'espace des embeddings.",
+                        color="info",
+                        className="mb-3",
+                    ),
+                    dbc.Row([
+                        dbc.Col([
+                            html.Label("Année des objectifs :"),
+                            dcc.RadioItems(
+                                id="obj-art-year",
+                                options=[
+                                    {"label": "2024", "value": "2024"},
+                                    {"label": "2025", "value": "2025"},
+                                ],
+                                value="2025",
+                                inline=True,
+                            ),
+                        ], md=3),
+                        dbc.Col([
+                            html.Label("Objectif budgétaire :"),
+                            dcc.Dropdown(
+                                id="obj-art-select",
+                                placeholder="Choisissez un objectif…",
+                                options=[],
+                                value=None,
+                            ),
+                        ], md=9),
+                    ], className="mb-4"),
+
+                    dbc.Row([
+                        dbc.Col([
+                            html.H5("Objectif sélectionné", className="mb-2"),
+                            html.Div(id="obj-art-summary"),
+                        ], md=12),
+                    ], className="mb-3"),
+
+                    dbc.Row([
+                        dbc.Col([
+                            html.H5("Top 3 objectifs similaires", className="mb-2"),
+                            html.Div(id="obj-art-top-objectifs"),
+                        ], md=6),
+                        dbc.Col([
+                            html.H5("Top 2 articles similaires", className="mb-2"),
+                            html.Div(id="obj-art-top-articles"),
+                        ], md=6),
+                    ]),
+                ],
+            ),
+
+            # ── Onglet Embeddings UMAP ────────────────────────────────────────
+            dbc.Tab(
+                label="Embeddings (UMAP)",
+                children=[
+                    html.Br(),
+                    html.H4("Visualisation des embeddings (UMAP)", className="mb-3"),
+                    dbc.Alert(
+                        "Projection 2D des vecteurs d'embedding (sentence-transformers). Survolez un point pour voir l'ID/titre (si disponible).",
                         color="secondary",
                         className="mb-3",
                     ),
@@ -1114,17 +1222,17 @@ def create_barometer_page():
                     ], className="mb-3"),
                     dcc.Graph(id="barometer-umap-graph"),
                     html.Br(),
-                    html.H5("📌 Distribution des clusters K-Means par année", className="mb-3"),
+                    html.H5("Distribution des clusters K-Means par année", className="mb-3"),
                     dcc.Graph(id="barometer-umap-cluster-bar"),
                 ],
             ),
 
             # ── Onglet Observations clés ──────────────────────────────────────
             dbc.Tab(
-                label="💡 Observations clés",
+                label="Observations clés",
                 children=[
                     html.Br(),
-                    html.H4("💡 Observations Clés", className="mb-3"),
+                    html.H4("Observations Clés", className="mb-3"),
                     dbc.Alert([
                         html.H5("Points saillants", className="alert-heading"),
                         html.Ul([
@@ -1150,20 +1258,20 @@ def create_stats_page():
     """Page Tests Statistiques."""
     if 'budget_2024' not in DATA or 'budget_2025' not in DATA:
         return html.Div([
-            dbc.Alert("⚠️ Données non disponibles", color="warning")
+            dbc.Alert("Données non disponibles", color="warning")
         ])
 
     return html.Div([
-        html.H1("📈 Tests Statistiques et Analyses", className="mb-4"),
+        html.H1("Tests Statistiques et Analyses", className="mb-4"),
 
         dbc.Tabs([
-            dbc.Tab(label="📊 Statistiques Descriptives", tab_id="stats-desc"),
-            dbc.Tab(label="🔬 Tests Comparatifs", tab_id="stats-tests"),
-            dbc.Tab(label="📉 Distributions", tab_id="stats-dist"),
-        ], id="stats-tabs", active_tab="stats-desc"),
+            dbc.Tab(label="Statistiques Descriptives", tab_id="stats-desc"),
+            dbc.Tab(label="Tests Comparatifs", tab_id="stats-tests"),
+            dbc.Tab(label="Distributions", tab_id="stats-dist"),
+        ], id="stats-tabs", active_tab="stats-desc", class_name="page-tabs"),
 
         html.Div(id="stats-content", className="mt-4")
-    ])
+    ], className="page-container page-stats")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1204,6 +1312,177 @@ def render_topics_content(active_tab):
         return create_topics_year_content(2025)
     elif active_tab == 'tab-comparison':
         return create_topics_comparison_content()
+
+
+@app.callback(
+    [
+        Output("obj-art-select", "options"),
+        Output("obj-art-select", "value"),
+    ],
+    Input("obj-art-year", "value"),
+)
+def update_obj_art_options(year_value: str):
+    """Met à jour la liste des objectifs disponibles pour l'année choisie."""
+    try:
+        year_int = int(year_value)
+    except (TypeError, ValueError):
+        return [], None
+
+    key = f"objectifs_classifications_{year_int}"
+    df = DATA.get(key)
+    if not isinstance(df, pd.DataFrame) or df.empty:
+        return [], None
+
+    if "id_objectif" not in df.columns:
+        # Rétro‑compatibilité : index comme identifiant
+        df = df.reset_index().rename(columns={"index": "id_objectif"})
+        DATA[key] = df
+
+    options = []
+    for _, row in df.iterrows():
+        obj_txt = str(row.get("objectif", "")).strip()
+        prog_txt = str(row.get("programme", "")).strip()
+        label = prog_txt if prog_txt else obj_txt
+        if obj_txt:
+            label = f"{prog_txt} — {obj_txt}" if prog_txt else obj_txt
+        # Tronquer pour éviter des labels trop longs
+        if len(label) > 160:
+            label = label[:157] + "…"
+        options.append({"label": label, "value": int(row["id_objectif"])})
+
+    default_value = options[0]["value"] if options else None
+    return options, default_value
+
+
+@app.callback(
+    [
+        Output("obj-art-summary", "children"),
+        Output("obj-art-top-objectifs", "children"),
+        Output("obj-art-top-articles", "children"),
+    ],
+    [
+        Input("obj-art-year", "value"),
+        Input("obj-art-select", "value"),
+    ],
+)
+def update_obj_art_barometer(year_value: str, objectif_id: int):
+    """Calcule les top 3 objectifs et top 2 articles similaires pour un objectif donné."""
+    if not year_value or objectif_id is None:
+        msg = dbc.Alert("Sélectionnez une année et un objectif.", color="secondary")
+        return msg, html.Div(), html.Div()
+
+    try:
+        year_int = int(year_value)
+    except (TypeError, ValueError):
+        msg = dbc.Alert("Année invalide.", color="danger")
+        return msg, html.Div(), html.Div()
+
+    key_obj = f"objectifs_classifications_{year_int}"
+    emb_obj_key = f"emb_objectifs_{year_int}"
+    emb_art_key = f"embeddings_{year_int}"
+    art_key = f"articles_clusters_{year_int}"
+
+    df_obj = DATA.get(key_obj)
+    emb_obj = DATA.get(emb_obj_key)
+    emb_art = DATA.get(emb_art_key)
+    df_art = DATA.get(art_key)
+
+    if not isinstance(df_obj, pd.DataFrame) or df_obj.empty:
+        msg = dbc.Alert("Données d'objectifs non disponibles pour cette année.", color="warning")
+        return msg, html.Div(), html.Div()
+    if not isinstance(emb_obj, np.ndarray) or emb_obj.ndim != 2:
+        msg = dbc.Alert("Embeddings des objectifs non disponibles pour cette année.", color="warning")
+        return msg, html.Div(), html.Div()
+
+    # S'assurer de la présence d'un identifiant aligné avec les embeddings
+    if "id_objectif" not in df_obj.columns:
+        df_obj = df_obj.reset_index().rename(columns={"index": "id_objectif"})
+        DATA[key_obj] = df_obj
+
+    # Récupérer la ligne de l'objectif sélectionné
+    sub = df_obj[df_obj["id_objectif"].astype(int) == int(objectif_id)]
+    if sub.empty:
+        msg = dbc.Alert("Objectif sélectionné introuvable dans les données.", color="danger")
+        return msg, html.Div(), html.Div()
+
+    row = sub.iloc[0]
+    idx = int(row["id_objectif"])
+    if idx < 0 or idx >= emb_obj.shape[0]:
+        msg = dbc.Alert("Incohérence entre les embeddings et les objectifs (index hors bornes).", color="danger")
+        return msg, html.Div(), html.Div()
+
+    v = emb_obj[idx]
+
+    # Top 3 objectifs similaires (même année)
+    sims_obj = emb_obj @ v
+    sims_obj[idx] = -1.0  # exclure l'objectif lui‑même
+    order_obj = np.argsort(-sims_obj)
+    top_idx_obj = [int(i) for i in order_obj[:3] if 0 <= i < emb_obj.shape[0]]
+
+    df_top_obj = df_obj.iloc[top_idx_obj].copy() if top_idx_obj else pd.DataFrame()
+    if not df_top_obj.empty:
+        df_top_obj["similarite"] = [float(sims_obj[i]) for i in top_idx_obj]
+
+    # Top 2 articles similaires (si embeddings + métadonnées disponibles)
+    df_top_art = pd.DataFrame()
+    if isinstance(emb_art, np.ndarray) and emb_art.ndim == 2 and isinstance(df_art, pd.DataFrame):
+        try:
+            sims_art = emb_art @ v
+            order_art = np.argsort(-sims_art)
+            top_idx_art = [int(i) for i in order_art[:2] if 0 <= i < emb_art.shape[0]]
+            df_top_art = df_art.iloc[top_idx_art].copy()
+            df_top_art["similarite"] = [float(sims_art[i]) for i in top_idx_art]
+        except Exception:
+            df_top_art = pd.DataFrame()
+
+    # Résumé de l'objectif sélectionné
+    pilier_dom = row.get("pilier_dominant", "N/A")
+    score_dom = row.get("score_pilier_dominant", None)
+    # Construction du résumé de l'objectif sélectionné sans concaténer directement
+    # des composants Dash avec des chaînes de caractères.
+    if isinstance(score_dom, (int, float)):
+        score_children = [html.B("Score pilier dominant : "), f"{float(score_dom):.3f}"]
+    else:
+        score_children = [html.B("Score pilier dominant : "), html.Span("N/A")]
+
+    summary = dbc.Card([
+        dbc.CardBody([
+            html.P(f"Année : {year_int}", className="mb-1"),
+            html.P([html.B("Programme : "), str(row.get("programme", "N/A"))]),
+            html.P([html.B("Objectif : "), str(row.get("objectif", "N/A"))]),
+            html.P([html.B("Pilier dominant : "), str(pilier_dom)]),
+            html.P(score_children),
+        ])
+    ], className="mb-3")
+
+    # Tableau Top 3 objectifs
+    if df_top_obj.empty:
+        top_obj_div = dbc.Alert("Pas d'autres objectifs comparables trouvés.", color="secondary")
+    else:
+        cols = [
+            "id_objectif", "programme", "objectif", "pilier_dominant",
+            "score_pilier_dominant", "similarite",
+        ]
+        display_cols = [c for c in cols if c in df_top_obj.columns]
+        df_disp = df_top_obj[display_cols].copy()
+        if "score_pilier_dominant" in df_disp.columns:
+            df_disp["score_pilier_dominant"] = df_disp["score_pilier_dominant"].astype(float).round(3)
+        if "similarite" in df_disp.columns:
+            df_disp["similarite"] = df_disp["similarite"].astype(float).round(3)
+        top_obj_div = dbc.Table.from_dataframe(df_disp, striped=True, bordered=True, hover=True)
+
+    # Tableau Top 2 articles
+    if df_top_art.empty:
+        top_art_div = dbc.Alert("Embeddings / métadonnées articles non disponibles pour calculer les similarités.", color="secondary")
+    else:
+        cols_art = ["id", "titre", "chapitre", "cluster_kmeans", "similarite"]
+        display_cols_art = [c for c in cols_art if c in df_top_art.columns]
+        df_art_disp = df_top_art[display_cols_art].copy()
+        if "similarite" in df_art_disp.columns:
+            df_art_disp["similarite"] = df_art_disp["similarite"].astype(float).round(3)
+        top_art_div = dbc.Table.from_dataframe(df_art_disp, striped=True, bordered=True, hover=True)
+
+    return summary, top_obj_div, top_art_div
 
 
 def create_topics_year_content(year):
@@ -1330,21 +1609,21 @@ def render_topic_details(year, topic_id):
                         html.P(', '.join(words), className="text-primary"),
                         html.Hr(),
                         html.H6("Statistiques :"),
-                        html.P(f"📄 {n_articles} articles associés (score > 0.3)"),
+                        html.P(f"{n_articles} articles associés (score > 0.3)"),
                     ])
-                ])
+                ], className="kpi-card shadow-sm")
             ], md=6),
 
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.H5("☁️ Nuage de Mots")),
+                    dbc.CardHeader(html.H5("Nuage de Mots")),
                     dbc.CardBody([
                         html.Img(
                             src=f'data:image/png;base64,{wordcloud_img}',
                             style={'width': '100%', 'height': 'auto'}
                         )
                     ])
-                ])
+                ], className="wordcloud-card shadow-sm")
             ], md=6),
         ]),
         html.Br(),
@@ -1436,7 +1715,7 @@ def create_topics_comparison_content():
         fig_words.for_each_annotation(lambda a: a.update(text=a.text.replace("topic=", "Topic ")))
 
     return html.Div([
-        html.H3("🔄 Comparaison des Topics 2024 vs 2025", className="mb-4"),
+        html.H3("Comparaison des Topics 2024 vs 2025", className="mb-4"),
         dbc.Alert("Comparaison des thématiques : prévalence (topic dominant) et mots-clés (LDA).", color="info"),
         dbc.Row([
             dbc.Col([dcc.Graph(figure=fig_prev)], md=12),
@@ -1447,11 +1726,11 @@ def create_topics_comparison_content():
         html.Hr(),
         dbc.Row([
             dbc.Col([
-                html.H5("📅 Topics 2024 (top mots)"),
+                html.H5("Topics 2024 (top mots)"),
                 html.Ul([html.Li(f"Topic {i}: {', '.join(_top_words(topics_2024, i))}") for i in topic_ids_2024])
             ], md=6),
             dbc.Col([
-                html.H5("📅 Topics 2025 (top mots)"),
+                html.H5("Topics 2025 (top mots)"),
                 html.Ul([html.Li(f"Topic {i}: {', '.join(_top_words(topics_2025, i))}") for i in topic_ids_2025])
             ], md=6),
         ]),
@@ -1473,10 +1752,163 @@ def create_clustering_year_content(year):
     clusters_df = DATA[f'articles_clusters_{year}']
 
     if 'cluster_kmeans' not in clusters_df.columns:
-        return dbc.Alert("⚠️ Colonne cluster_kmeans non trouvée", color="warning")
-
+        return dbc.Alert("Colonne cluster_kmeans non trouvée", color="warning")
     n_clusters = clusters_df['cluster_kmeans'].nunique()
 
+    # ── Répartition des articles par cluster (sans UMAP) ──────────────────
+    # K-Means : nombre d'articles dans chaque cluster
+    km_counts = clusters_df['cluster_kmeans'].value_counts().sort_index()
+    fig_kmeans = px.bar(
+        x=km_counts.index.astype(str),
+        y=km_counts.values,
+        labels={"x": "Cluster K-Means", "y": "Nombre d'articles"},
+        title=f"Répartition des articles par cluster K-Means ({year})",
+    )
+
+    # HDBSCAN : nombre d'articles par cluster (incluant le bruit -1)
+    fig_hdbscan = go.Figure()
+    if 'cluster_hdbscan' in clusters_df.columns:
+        hdb_counts = clusters_df['cluster_hdbscan'].value_counts().sort_index()
+        fig_hdbscan = px.bar(
+            x=hdb_counts.index.astype(str),
+            y=hdb_counts.values,
+            labels={"x": "Cluster HDBSCAN (-1 = bruit)", "y": "Nombre d'articles"},
+            title=f"Répartition des articles par cluster HDBSCAN ({year})",
+        )
+    else:
+        fig_hdbscan.add_annotation(
+            text="Labels HDBSCAN non disponibles pour cette année.",
+            xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False,
+        )
+        fig_hdbscan.update_xaxes(visible=False)
+        fig_hdbscan.update_yaxes(visible=False)
+
+    # ── Courbe du coude (inertie K-Means) ─────────────────────────────────
+    from sklearn.cluster import KMeans  # import local pour éviter le coût global
+
+    fig_elbow = go.Figure()
+    emb_key = f"embeddings_{year}"
+    X = DATA.get(emb_key)
+    if isinstance(X, np.ndarray) and X.shape[0] >= 3:
+        max_k = max(2, min(10, X.shape[0] - 1))
+        ks: list[int] = []
+        inertias: list[float] = []
+        for k in range(2, max_k + 1):
+            try:
+                km = KMeans(n_clusters=k, random_state=42, n_init=10)
+                km.fit(X)
+                ks.append(k)
+                inertias.append(float(km.inertia_))
+            except Exception:
+                continue
+        if ks:
+            fig_elbow.add_trace(
+                go.Scatter(
+                    x=ks,
+                    y=inertias,
+                    mode="lines+markers",
+                    name="Inertie intra-cluster",
+                )
+            )
+            fig_elbow.update_layout(
+                title=f"Règle du coude — K-Means ({year})",
+                xaxis_title="Nombre de clusters k",
+                yaxis_title="Inertie",
+            )
+        else:
+            fig_elbow.add_annotation(
+                text="Impossible de calculer l'inertie (données insuffisantes).",
+                xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False,
+            )
+            fig_elbow.update_xaxes(visible=False)
+            fig_elbow.update_yaxes(visible=False)
+    else:
+        fig_elbow.add_annotation(
+            text="Embeddings non disponibles pour cette année.",
+            xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False,
+        )
+        fig_elbow.update_xaxes(visible=False)
+        fig_elbow.update_yaxes(visible=False)
+
+    # ── Métriques de performance des clusters ─────────────────────────────
+
+    def _get_metrics(year_: int, algo: str) -> dict:
+        """Récupère (avec cache) les métriques de clustering pour une année / algo."""
+        cache_key = (year_, algo)
+        if cache_key in _CLUSTER_METRICS_CACHE:
+            return _CLUSTER_METRICS_CACHE[cache_key]
+
+        emb_key = f"embeddings_{year_}"
+        X = DATA.get(emb_key)
+        if X is None:
+            return {}
+
+        col = f"cluster_{algo}"
+        if col not in clusters_df.columns:
+            return {}
+
+        labels = clusters_df[col].to_numpy()
+        n = min(len(X), len(labels))
+        if n < 3:
+            return {}
+
+        metrics = _cluster_metrics(X[:n], labels[:n])
+        _CLUSTER_METRICS_CACHE[cache_key] = metrics
+        return metrics
+
+    def _metrics_card(title: str, metrics: dict, color: str) -> dbc.Card:
+        def fmt(x):
+            if x is None:
+                return "N/A"
+            try:
+                if isinstance(x, (int, float)) and not np.isfinite(x):
+                    return "N/A"
+                return f"{x:.3f}" if isinstance(x, float) else str(x)
+            except Exception:
+                return str(x)
+
+        n_points = metrics.get("n_points")
+        n_clusters = metrics.get("n_clusters")
+        pct_noise = metrics.get("pct_noise")
+        sil = metrics.get("silhouette")
+        db = metrics.get("davies_bouldin")
+        ch = metrics.get("calinski_harabasz")
+
+        body = [
+            html.P(f"Nombre de points : {fmt(n_points)}"),
+            html.P(f"Nombre de clusters : {fmt(n_clusters)}"),
+        ]
+        if pct_noise is not None:
+            body.append(html.P(f"Bruit: {fmt(pct_noise)}%"))
+        body.extend([
+            html.Hr(),
+            html.P(f"Silhouette : {fmt(sil)}"),
+            html.P(f"Davies-Bouldin : {fmt(db)}"),
+            html.P(f"Calinski-Harabasz : {fmt(ch)}"),
+        ])
+
+        return dbc.Card([
+            dbc.CardHeader(html.H5(title), className=f"bg-{color} text-white"),
+            dbc.CardBody(body),
+        ], className="kpi-card shadow-sm")
+
+    metrics_kmeans = _get_metrics(year, "kmeans")
+    metrics_hdbscan = _get_metrics(year, "hdbscan")
+
+    metrics_row = dbc.Row([
+        dbc.Col([
+            _metrics_card("K-Means", metrics_kmeans, "primary")
+            if metrics_kmeans else
+            dbc.Alert("Métriques K-Means non disponibles.", color="warning"),
+        ], md=6),
+        dbc.Col([
+            _metrics_card("HDBSCAN", metrics_hdbscan, "info")
+            if metrics_hdbscan else
+            dbc.Alert("Métriques HDBSCAN non disponibles.", color="warning"),
+        ], md=6),
+    ], className="mb-4")
+
+    # ── Sélecteur de cluster + détails (K-Means) ───────────────────────────
     cluster_selector = dbc.Row([
         dbc.Col([
             html.Label(f"Sélectionnez un cluster K-Means {year} :"),
@@ -1485,12 +1917,21 @@ def create_clustering_year_content(year):
                 options=[{'label': f'Cluster {i}', 'value': i} for i in range(n_clusters)],
                 value=0,
                 clearable=False
-            )
-        ], md=6)
+            ),
+        ], md=6),
     ], className="mb-4")
 
     return html.Div([
-        html.H3(f"K-Means Clustering - {year}", className="mb-3"),
+        html.H3(f"Clustering des articles - {year}", className="mb-3"),
+        dbc.Row([
+            dbc.Col([dcc.Graph(figure=fig_kmeans)], md=6),
+            dbc.Col([dcc.Graph(figure=fig_hdbscan)], md=6),
+        ], className="mb-4"),
+        html.H4("Règle du coude (inertie K-Means)", className="mb-3"),
+        dcc.Graph(figure=fig_elbow),
+        html.H4("Métriques de performance des clusters", className="mb-3 mt-4"),
+        metrics_row,
+        html.Hr(),
         cluster_selector,
         html.Div(id=f'cluster-details-{year}')
     ])
@@ -1524,11 +1965,11 @@ def render_cluster_details(year, cluster_id):
     cluster_text = get_cluster_texts(clusters_df, cluster_id)
     wordcloud_img = create_wordcloud(cluster_text, colormap='plasma', max_words=50)
 
+    pilier_dominant: str | None = None
     if 'pilier_dominant' in cluster_articles.columns:
-        pilier_counts = cluster_articles['pilier_dominant'].value_counts()
-        pilier_dominant = pilier_counts.index[0] if len(pilier_counts) > 0 else "N/A"
-    else:
-        pilier_dominant = "N/A"
+        pilier_counts = cluster_articles['pilier_dominant'].dropna().value_counts()
+        if len(pilier_counts) > 0:
+            pilier_dominant = str(pilier_counts.index[0])
 
     return html.Div([
         dbc.Row([
@@ -1537,8 +1978,10 @@ def render_cluster_details(year, cluster_id):
                     dbc.CardHeader(html.H4(f"Cluster {cluster_id} - {year}")),
                     dbc.CardBody([
                         html.H6("Statistiques :"),
-                        html.P(f"📄 {n_articles} articles"),
-                        html.P(f"🎯 Pilier dominant: {pilier_dominant}"),
+                        html.P(f"{n_articles} articles"),
+                        *([
+                            html.P(f"Pilier dominant : {pilier_dominant}")
+                        ] if pilier_dominant else []),
                         html.Hr(),
                         html.H6("Exemples d'articles :"),
                         html.Ul([
@@ -1546,19 +1989,19 @@ def render_cluster_details(year, cluster_id):
                             for _, row in cluster_articles.head(3).iterrows()
                         ] if 'content' in cluster_articles.columns else [html.Li("Pas de contenu disponible")])
                     ])
-                ])
+                ], className="kpi-card shadow-sm")
             ], md=6),
 
             dbc.Col([
                 dbc.Card([
-                    dbc.CardHeader(html.H5("☁️ Nuage de Mots du Cluster")),
+                    dbc.CardHeader(html.H5("Nuage de Mots du Cluster")),
                     dbc.CardBody([
                         html.Img(
                             src=f'data:image/png;base64,{wordcloud_img}',
                             style={'width': '100%', 'height': 'auto'}
                         )
                     ])
-                ])
+                ], className="wordcloud-card shadow-sm")
             ], md=6),
         ])
     ])
@@ -2006,7 +2449,7 @@ def update_barometer_umap(selected_years, selected_clusters, selected_titles):
         y="y",
         color="annee",
         hover_data=hover_cols if hover_cols else None,
-        title="UMAP des embeddings CamemBERT (articles 2024 vs 2025)",
+        title="UMAP des embeddings (articles 2024 vs 2025)",
     )
     fig.update_traces(marker=dict(size=8, opacity=0.65))
     fig.update_layout(height=650, legend_title_text="Année")
@@ -2172,7 +2615,7 @@ def create_stats_descriptives():
     stats_2025 = budget_2025[['ae', 'cp']].describe()
 
     return html.Div([
-        html.H3("📊 Statistiques Descriptives", className="mb-4"),
+        html.H3("Statistiques Descriptives", className="mb-4"),
 
         dbc.Row([
             dbc.Col([
@@ -2237,7 +2680,7 @@ def create_stats_tests():
                     className="text-muted"
                 ),
             ])
-        ], className="mb-4")
+        ], className="mb-4 kpi-card shadow-sm")
 
     mw_section = html.Div()
     if mw_df is not None and not mw_df.empty:
@@ -2250,7 +2693,7 @@ def create_stats_tests():
         ])
 
     return html.Div([
-        html.H3("🔬 Tests Comparatifs 2024 vs 2025", className="mb-4"),
+        html.H3("Tests Comparatifs 2024 vs 2025", className="mb-4"),
 
         dbc.Card([
             dbc.CardHeader(html.H5("Comparaison des Moyennes AE/CP")),
@@ -2264,7 +2707,7 @@ def create_stats_tests():
                     className="text-muted"
                 )
             ])
-        ], className="mb-4"),
+        ], className="mb-4 kpi-card shadow-sm"),
 
         chi2_section,
         mw_section,
@@ -2296,7 +2739,7 @@ def create_stats_distributions():
     fig_hist.update_layout(height=500, showlegend=False)
 
     return html.Div([
-        html.H3("📉 Distributions des Montants", className="mb-4"),
+        html.H3("Distributions des Montants", className="mb-4"),
         dcc.Graph(figure=fig_hist),
 
         html.Hr(),

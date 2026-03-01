@@ -11,6 +11,43 @@ body {
   background: radial-gradient(circle at top left, #e3edf9 0, #f4f6fb 40%, #ffffff 100%);
 }
 
+/* Barre de navigation horizontale */
+
+.top-nav {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+  background: linear-gradient(90deg, #1e3a5f 0%, #2c5f8d 45%, #2563eb 100%);
+}
+
+.top-nav .navbar-brand-text .navbar-title {
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.top-nav .navbar-brand-text .navbar-subtitle {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.top-nav-links .nav-link {
+  color: rgba(255, 255, 255, 0.9);
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+.top-nav-links .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.top-nav-links .nav-link.active {
+  background-color: #ffffff;
+  color: #1e3a5f !important;
+}
+
+.theme-toggle-switch .form-check-input {
+  cursor: pointer;
+}
+
 /* Sidebar */
 
 .sidebar {
@@ -92,6 +129,12 @@ body {
   padding: 16px 20px;
 }
 
+.pilier-badge {
+  border-radius: 999px;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+}
+
 /* Tableaux */
 
 table.table {
@@ -115,6 +158,45 @@ table.table thead th {
 
 .wordcloud-card img {
   border-radius: 12px;
+}
+
+/* Mode sombre */
+
+.app-theme-dark {
+  background: radial-gradient(circle at top left, #020617 0, #020617 40%, #020617 100%);
+  color: #e5e7eb;
+}
+
+.app-theme-dark .content-area {
+  background-color: #020617;
+}
+
+.app-theme-dark .page-container {
+  color: #e5e7eb;
+}
+
+.app-theme-dark .kpi-card,
+.app-theme-dark .wordcloud-card,
+.app-theme-dark table.table {
+  background-color: #020617;
+  color: #e5e7eb;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.8);
+}
+
+.app-theme-dark .page-tabs .nav-link.active {
+  background-color: #facc15 !important;
+  color: #0b1120 !important;
+}
+
+.app-theme-dark .top-nav {
+  background: linear-gradient(90deg, #020617 0%, #020617 50%, #0b1120 100%);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+}
+
+.app-theme-dark .navbar-title,
+.app-theme-dark .navbar-subtitle,
+.app-theme-dark .top-nav-links .nav-link {
+  color: rgba(255, 255, 255, 0.9);
 }
 
 /* Petits ajustements responsive */

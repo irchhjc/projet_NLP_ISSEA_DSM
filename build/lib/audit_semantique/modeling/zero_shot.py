@@ -5,12 +5,13 @@ Modèle : MoritzLaurer/mDeBERTa-v3-base-mnli-xnli (multilingue).
 """
 from __future__ import annotations
 
-from typing import List
+from typing import List, Optional
 
 import pandas as pd
 from loguru import logger
 from tqdm.auto import tqdm
 from transformers import pipeline
+import torch
 
 from audit_semantique.config import PILIERS_SND30, ZERO_SHOT_MODEL, ZERO_SHOT_PARAMS
 
@@ -25,19 +26,25 @@ class ZeroShotClassifier:
         Identifiant HuggingFace du modèle (défaut : mDeBERTa-v3-mnli-xnli).
     piliers : List[str]
         Labels cibles. Par défaut, les 4 piliers SND30.
-    device : int
-        ``0`` pour GPU, ``-1`` pour CPU.
+    device : int | None
+        ``0`` pour GPU, ``-1`` pour CPU. Si None, choisi automatiquement
+        (GPU si dispo, sinon CPU).
     """
 
     def __init__(
         self,
         model_name: str = ZERO_SHOT_MODEL,
         piliers: List[str] = PILIERS_SND30,
-        device: int = -1,
+        device: Optional[int] = None,
     ) -> None:
         self.model_name = model_name
         self.piliers = piliers
-        self.device = device
+        if device is None:
+            # Auto-détection GPU pour de meilleures performances
+            self.device = 0 if torch.cuda.is_available() else -1
+            logger.info(f"🖥️  Zero-shot device détecté : {self.device}")
+        else:
+            self.device = device
         self._pipeline = None
 
     def _load(self) -> None:
@@ -49,7 +56,7 @@ class ZeroShotClassifier:
             model=self.model_name,
             device=self.device,
         )
-        logger.info("✅ Classifieur prêt.")
+        logger.info("Classifieur prêt.")
 
     # ── API publique ─────────────────────────────────────────────────────────
 
@@ -60,6 +67,7 @@ class ZeroShotClassifier:
         batch_size: int = ZERO_SHOT_PARAMS["batch_size"],
         max_length: int = ZERO_SHOT_PARAMS["max_length"],
         multi_label: bool = ZERO_SHOT_PARAMS["multi_label"],
+        hypothesis_template: Optional[str] = ZERO_SHOT_PARAMS.get("hypothesis_template"),
     ) -> pd.DataFrame:
         """
         Ajoute une colonne ``score_<pilier>`` et ``pilier_dominant`` au DataFrame.
@@ -76,6 +84,9 @@ class ZeroShotClassifier:
             Longueur max (tokens) avant troncature.
         multi_label : bool
             Si True, les scores ne sont pas normalisés à 1.
+        hypothesis_template : str | None
+            Phrase modèle pour le zero-shot (en français). Si None,
+            un template adapté aux piliers SND30 est utilisé.
 
         Returns
         -------
@@ -83,6 +94,12 @@ class ZeroShotClassifier:
         """
         self._load()
         df = df.copy()
+
+        # Template par défaut, en français, adapté aux piliers SND30
+        template = (
+            hypothesis_template
+            or "Ce texte de loi concerne principalement le pilier suivant du SND30 : {}."
+        )
 
         # Pré-créer les colonnes de scores
         for pilier in self.piliers:
@@ -99,6 +116,7 @@ class ZeroShotClassifier:
                 multi_label=multi_label,
                 truncation=True,
                 max_length=max_length,
+                hypothesis_template=template,
             )
 
             for j, res in enumerate(results):
@@ -111,7 +129,8 @@ class ZeroShotClassifier:
         df["pilier_dominant"] = df[score_cols].idxmax(axis=1).str.replace(
             "score_", "", regex=False
         )
-        logger.info("✅ Classification SND30 terminée.")
+        df["score_pilier_dominant"] = df[score_cols].max(axis=1)
+        logger.info("Classification SND30 terminée.")
         return df
 
     def export_excel(self, df: pd.DataFrame, path: str | None = None) -> str:
