@@ -508,26 +508,26 @@ sidebar = html.Div([
         html.H3("Audit Sémantique", className="text-center text-white"),
         html.P("Loi de Finances du Cameroun", className="text-center text-white-50"),
         html.P("ISE3-DS | ISSEA Yaoundé | 2025-2026", className="text-center text-white-50 small"),
-    ], style={'padding': '20px'}),
+    ], style={'padding': '20px'}, className="sidebar-header"),
 
     html.Hr(style={'borderColor': 'rgba(255,255,255,0.2)'}),
 
     dbc.Nav([
         dbc.NavLink([html.I(className="fas fa-home me-2"), "Accueil"],
-                    href="/", active="exact", className="text-white"),
+                    href="/", active="exact", className="text-white sidebar-link"),
         dbc.NavLink([html.I(className="fas fa-chart-line me-2"), "Baromètre"],
-                    href="/barometer", active="exact", className="text-white"),
+                    href="/barometer", active="exact", className="text-white sidebar-link"),
         dbc.NavLink([html.I(className="fas fa-tags me-2"), "Classification SND30"],
-                    href="/classification", active="exact", className="text-white"),
+                    href="/classification", active="exact", className="text-white sidebar-link"),
         dbc.NavLink([html.I(className="fas fa-brain me-2"), "Topic Modeling"],
-                    href="/topics", active="exact", className="text-white"),
+                    href="/topics", active="exact", className="text-white sidebar-link"),
         dbc.NavLink([html.I(className="fas fa-project-diagram me-2"), "Clustering"],
-                    href="/clustering", active="exact", className="text-white"),
+                    href="/clustering", active="exact", className="text-white sidebar-link"),
         dbc.NavLink([html.I(className="fas fa-money-bill-wave me-2"), "Analyse Budgétaire"],
-                    href="/budget", active="exact", className="text-white"),
+                    href="/budget", active="exact", className="text-white sidebar-link"),
         dbc.NavLink([html.I(className="fas fa-chart-bar me-2"), "Tests Statistiques"],
-                    href="/stats", active="exact", className="text-white"),
-    ], vertical=True, pills=True),
+                    href="/stats", active="exact", className="text-white sidebar-link"),
+    ], vertical=True, pills=True, class_name="sidebar-nav"),
 
     html.Hr(style={'borderColor': 'rgba(255,255,255,0.2)', 'marginTop': '20px'}),
 
@@ -537,7 +537,7 @@ sidebar = html.Div([
         html.P("• Analyse budgétaire AE/CP", className="text-white-50 small mb-0"),
         html.P("• Visualisations Dash/Plotly", className="text-white-50 small mb-0"),
     ], style={'padding': '0 20px'}),
-], style={
+], className="sidebar", style={
     'position': 'fixed',
     'top': 0,
     'left': 0,
@@ -551,6 +551,7 @@ sidebar = html.Div([
 # Content
 content = html.Div(
     id="page-content",
+    className="content-area",
     style={
         'marginLeft': '280px',
         'padding': '30px',
@@ -562,7 +563,7 @@ app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
     sidebar,
     content
-])
+], className="app-layout")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -661,7 +662,7 @@ def create_home_page():
 
         html.Hr(className="my-4"),
         html.P("Développé par ISE3-DS | ISSEA Yaoundé | 2025-2026", className="text-muted text-center"),
-    ])
+    ], className="page-container page-home")
 
 
 def create_topics_page():
@@ -687,10 +688,10 @@ def create_topics_page():
             dbc.Tab(label="2024", tab_id="tab-2024"),
             dbc.Tab(label="2025", tab_id="tab-2025"),
             dbc.Tab(label="Comparaison", tab_id="tab-comparison"),
-        ], id="topics-tabs", active_tab="tab-2024"),
+        ], id="topics-tabs", active_tab="tab-2024", class_name="page-tabs"),
 
         html.Div(id="topics-content", className="mt-4")
-    ])
+    ], className="page-container page-topics")
 
 
 def create_clustering_page():
@@ -712,10 +713,10 @@ def create_clustering_page():
         dbc.Tabs([
             dbc.Tab(label="2024", tab_id="cluster-2024"),
             dbc.Tab(label="2025", tab_id="cluster-2025"),
-        ], id="clustering-tabs", active_tab="cluster-2024"),
+        ], id="clustering-tabs", active_tab="cluster-2024", class_name="page-tabs"),
 
         html.Div(id="clustering-content", className="mt-4")
-    ])
+    ], className="page-container page-clustering")
 
 
 def create_budget_page():
@@ -817,7 +818,7 @@ def create_budget_page():
 
         html.H3("Évolution 2024 → 2025 par Pilier", className="mb-3"),
         dcc.Graph(id='budget-evolution-chart'),
-    ])
+    ], className="page-container page-budget")
 
 
 def create_classification_page():
@@ -842,10 +843,10 @@ def create_classification_page():
             dbc.Tab(label="2024", tab_id="classif-2024"),
             dbc.Tab(label="2025", tab_id="classif-2025"),
             dbc.Tab(label="Comparaison", tab_id="classif-comp"),
-        ], id="classification-tabs", active_tab="classif-2024"),
+        ], id="classification-tabs", active_tab="classif-2024", class_name="page-tabs"),
 
         html.Div(id="classification-content", className="mt-4")
-    ])
+    ], className="page-container page-classification")
 
 
 def create_barometer_page():
@@ -1267,10 +1268,10 @@ def create_stats_page():
             dbc.Tab(label="Statistiques Descriptives", tab_id="stats-desc"),
             dbc.Tab(label="Tests Comparatifs", tab_id="stats-tests"),
             dbc.Tab(label="Distributions", tab_id="stats-dist"),
-        ], id="stats-tabs", active_tab="stats-desc"),
+        ], id="stats-tabs", active_tab="stats-desc", class_name="page-tabs"),
 
         html.Div(id="stats-content", className="mt-4")
-    ])
+    ], className="page-container page-stats")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
