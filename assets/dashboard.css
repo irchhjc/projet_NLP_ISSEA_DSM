@@ -88,6 +88,10 @@ body {
   margin: 0 auto;
 }
 
+.app-theme-light .content-area {
+  background-color: #f8f9fa;
+}
+
 .page-container {
   padding-bottom: 40px;
 }

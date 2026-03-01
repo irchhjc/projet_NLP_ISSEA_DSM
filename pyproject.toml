@@ -1,9 +1,9 @@
 [project]
 name = "audit-semantique-cameroun"
-version = "0.1.0"
-description = ""
+version = "1.0.0"
+description = "Audit sémantique des Lois de Finances du Cameroun via NLP / Transformers."
 authors = [
-    {name = "Irch Defluviaire",email = "ngoubiliirch@gmail.com"}
+    {name = "ISE3-DS, ISSEA Yaoundé", email = "ngoubiliirch@gmail.com"}
 ]
 readme = "README.md"
 requires-python = ">=3.11,<3.15"

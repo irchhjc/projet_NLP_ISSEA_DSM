@@ -368,13 +368,26 @@ def map_pilier_label(value):
 # puis en affectant le résultat à cette variable globale.
 DATA: dict = {}
 
-# Couleurs des piliers SND30
+# Couleurs des piliers SND30 (utilise les libellés courts de config.PILIERS_COURT)
 PILIER_COLORS = {
-    'Gouvernance': '#1f77b4',
-    'Transformation_Structurelle': '#ff7f0e',
-    'Capital_Humain': '#2ca02c',
-    'Integration_Regionale': '#d62728'
+    "Transformation structurelle": "#f97316",  # orange
+    "Capital humain": "#22c55e",              # vert
+    "Emploi et insertion": "#a855f7",        # violet
+    "Gouvernance et décentralisation": "#0ea5e9",  # bleu
 }
+
+
+def render_pilier_badge(pilier: str | None):
+    """Retourne un badge coloré pour un pilier SND30."""
+    if pilier is None or str(pilier).strip() in {"", "N/A"}:
+        return html.Span("N/A")
+    label = str(pilier).strip()
+    color = PILIER_COLORS.get(label, "#6c757d")
+    return dbc.Badge(
+        label,
+        style={"backgroundColor": color, "color": "#ffffff"},
+        className="pilier-badge me-1",
+    )
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -498,72 +511,77 @@ server = app.server
 # LAYOUT PRINCIPAL
 # ══════════════════════════════════════════════════════════════════════════════
 
-# Sidebar
-sidebar = html.Div([
-    html.Div([
-        html.Img(
-            src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Flag_of_Cameroon.svg/320px-Flag_of_Cameroon.svg.png",
-            style={'width': '100px', 'margin': '20px auto', 'display': 'block'}
-        ),
-        html.H3("Audit Sémantique", className="text-center text-white"),
-        html.P("Loi de Finances du Cameroun", className="text-center text-white-50"),
-        html.P("ISE3-DS | ISSEA Yaoundé | 2025-2026", className="text-center text-white-50 small"),
-    ], style={'padding': '20px'}, className="sidebar-header"),
+# Barre de navigation horizontale (remplace l'ancienne sidebar)
+navbar = dbc.Navbar(
+    dbc.Container(
+        [
+            html.Div(
+                [
+                    html.Img(
+                        src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Flag_of_Cameroon.svg/64px-Flag_of_Cameroon.svg.png",
+                        style={"height": "32px", "marginRight": "12px"},
+                    ),
+                    html.Div(
+                        [
+                            html.Div("Audit Sémantique", className="navbar-title"),
+                            html.Div(
+                                "Loi de Finances du Cameroun",
+                                className="navbar-subtitle",
+                            ),
+                        ],
+                        className="navbar-brand-text",
+                    ),
+                ],
+                className="d-flex align-items-center",
+            ),
+            dbc.Nav(
+                [
+                    dbc.NavLink("Accueil", href="/", active="exact", className="top-nav-link"),
+                    dbc.NavLink("Baromètre", href="/barometer", active="exact", className="top-nav-link"),
+                    dbc.NavLink("Classification SND30", href="/classification", active="exact", className="top-nav-link"),
+                    dbc.NavLink("Topic Modeling", href="/topics", active="exact", className="top-nav-link"),
+                    dbc.NavLink("Clustering", href="/clustering", active="exact", className="top-nav-link"),
+                    dbc.NavLink("Analyse Budgétaire", href="/budget", active="exact", className="top-nav-link"),
+                    dbc.NavLink("Tests Statistiques", href="/stats", active="exact", className="top-nav-link"),
+                ],
+                pills=True,
+                className="ms-4 me-auto top-nav-links",
+            ),
+            html.Div(
+                [
+                    html.Span("Mode sombre", className="text-light small me-2"),
+                    dbc.Switch(id="theme-toggle", value=False, className="theme-toggle-switch"),
+                ],
+                className="d-flex align-items-center",
+            ),
+        ],
+        fluid=True,
+    ),
+    className="top-nav",
+    dark=True,
+    color="primary",
+)
 
-    html.Hr(style={'borderColor': 'rgba(255,255,255,0.2)'}),
-
-    dbc.Nav([
-        dbc.NavLink([html.I(className="fas fa-home me-2"), "Accueil"],
-                    href="/", active="exact", className="text-white sidebar-link"),
-        dbc.NavLink([html.I(className="fas fa-chart-line me-2"), "Baromètre"],
-                    href="/barometer", active="exact", className="text-white sidebar-link"),
-        dbc.NavLink([html.I(className="fas fa-tags me-2"), "Classification SND30"],
-                    href="/classification", active="exact", className="text-white sidebar-link"),
-        dbc.NavLink([html.I(className="fas fa-brain me-2"), "Topic Modeling"],
-                    href="/topics", active="exact", className="text-white sidebar-link"),
-        dbc.NavLink([html.I(className="fas fa-project-diagram me-2"), "Clustering"],
-                    href="/clustering", active="exact", className="text-white sidebar-link"),
-        dbc.NavLink([html.I(className="fas fa-money-bill-wave me-2"), "Analyse Budgétaire"],
-                    href="/budget", active="exact", className="text-white sidebar-link"),
-        dbc.NavLink([html.I(className="fas fa-chart-bar me-2"), "Tests Statistiques"],
-                    href="/stats", active="exact", className="text-white sidebar-link"),
-    ], vertical=True, pills=True, class_name="sidebar-nav"),
-
-    html.Hr(style={'borderColor': 'rgba(255,255,255,0.2)', 'marginTop': '20px'}),
-
-    html.Div([
-        html.P("Modèles utilisés", className="text-white-50 small mb-1"),
-        html.P("• Classification par mots-clés", className="text-white-50 small mb-0"),
-        html.P("• Analyse budgétaire AE/CP", className="text-white-50 small mb-0"),
-        html.P("• Visualisations Dash/Plotly", className="text-white-50 small mb-0"),
-    ], style={'padding': '0 20px'}),
-], className="sidebar", style={
-    'position': 'fixed',
-    'top': 0,
-    'left': 0,
-    'bottom': 0,
-    'width': '280px',
-    'padding': '0',
-    'background': 'linear-gradient(180deg, #1e3a5f 0%, #2c5f8d 100%)',
-    'overflowY': 'auto'
-})
-
-# Content
+# Zone de contenu principale
 content = html.Div(
     id="page-content",
     className="content-area",
     style={
-        'marginLeft': '280px',
         'padding': '30px',
+        'paddingTop': '100px',  # laisser de la place pour la barre de navigation fixe
         'backgroundColor': '#f8f9fa'
     }
 )
 
-app.layout = html.Div([
-    dcc.Location(id='url', refresh=False),
-    sidebar,
-    content
-], className="app-layout")
+app.layout = html.Div(
+    [
+        dcc.Location(id='url', refresh=False),
+        navbar,
+        content,
+    ],
+    id="app-root",
+    className="app-layout app-theme-light",
+)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1301,6 +1319,16 @@ def display_page(pathname):
 
 
 @app.callback(
+    Output("app-root", "className"),
+    Input("theme-toggle", "value"),
+)
+def toggle_theme(is_dark: bool | None):
+    """Active ou désactive le mode sombre via la classe CSS du conteneur racine."""
+    base = "app-layout "
+    return base + ("app-theme-dark" if is_dark else "app-theme-light")
+
+
+@app.callback(
     Output('topics-content', 'children'),
     Input('topics-tabs', 'active_tab')
 )
@@ -1450,7 +1478,7 @@ def update_obj_art_barometer(year_value: str, objectif_id: int):
             html.P(f"Année : {year_int}", className="mb-1"),
             html.P([html.B("Programme : "), str(row.get("programme", "N/A"))]),
             html.P([html.B("Objectif : "), str(row.get("objectif", "N/A"))]),
-            html.P([html.B("Pilier dominant : "), str(pilier_dom)]),
+            html.P([html.B("Pilier dominant : "), render_pilier_badge(pilier_dom)]),
             html.P(score_children),
         ])
     ], className="mb-3")
@@ -1980,7 +2008,10 @@ def render_cluster_details(year, cluster_id):
                         html.H6("Statistiques :"),
                         html.P(f"{n_articles} articles"),
                         *([
-                            html.P(f"Pilier dominant : {pilier_dominant}")
+                            html.P([
+                                "Pilier dominant : ",
+                                render_pilier_badge(pilier_dominant),
+                            ])
                         ] if pilier_dominant else []),
                         html.Hr(),
                         html.H6("Exemples d'articles :"),

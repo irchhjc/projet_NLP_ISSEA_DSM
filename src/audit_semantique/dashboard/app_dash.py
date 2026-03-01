@@ -569,7 +569,6 @@ content = html.Div(
     style={
         'padding': '30px',
         'paddingTop': '100px',  # laisser de la place pour la barre de navigation fixe
-        'backgroundColor': '#f8f9fa'
     }
 )
 

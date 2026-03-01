@@ -1,7 +1,8 @@
 Metadata-Version: 2.4
 Name: audit-semantique-cameroun
-Version: 0.1.0
-Author-email: Irch Defluviaire <ngoubiliirch@gmail.com>
+Version: 1.0.0
+Summary: Audit sémantique des Lois de Finances du Cameroun via NLP / Transformers.
+Author-email: "ISE3-DS, ISSEA Yaoundé" <chouta@gmail.com>
 Requires-Python: <3.15,>=3.11
 Description-Content-Type: text/markdown
 Requires-Dist: pandas<3
