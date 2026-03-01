@@ -588,7 +588,7 @@ def create_home_page():
                         html.H5("Baromètre", className="text-center"),
                         html.P("Glissement sémantique et distances", className="text-center small"),
                     ])
-                ], className="mb-3 shadow-sm")
+                ], className="mb-3 shadow-sm kpi-card")
             ], md=3),
 
             dbc.Col([
@@ -598,7 +598,7 @@ def create_home_page():
                         html.H5("Classification SND30", className="text-center"),
                         html.P("Répartition par piliers stratégiques", className="text-center small"),
                     ])
-                ], className="mb-3 shadow-sm")
+                ], className="mb-3 shadow-sm kpi-card")
             ], md=3),
 
             dbc.Col([
@@ -608,7 +608,7 @@ def create_home_page():
                         html.H5("Topic Modeling", className="text-center"),
                         html.P("Thématiques latentes (LDA)", className="text-center small"),
                     ])
-                ], className="mb-3 shadow-sm")
+                ], className="mb-3 shadow-sm kpi-card")
             ], md=3),
 
             dbc.Col([
@@ -618,7 +618,7 @@ def create_home_page():
                         html.H5("Budget AE/CP", className="text-center"),
                         html.P("Analyse des dépenses publiques", className="text-center small"),
                     ])
-                ], className="mb-3 shadow-sm")
+                ], className="mb-3 shadow-sm kpi-card")
             ], md=3),
         ]),
 
@@ -749,7 +749,7 @@ def create_budget_page():
                         html.H4(f"{total_ae_2024/1e9:.2f} Mds FCFA"),
                         html.Small(f"+{(total_ae_2025/total_ae_2024-1)*100:.1f}% vs 2025", className="text-success"),
                     ])
-                ])
+                ], className="kpi-card shadow-sm")
             ], md=3),
             dbc.Col([
                 dbc.Card([
@@ -758,7 +758,7 @@ def create_budget_page():
                         html.H4(f"{total_cp_2024/1e9:.2f} Mds FCFA"),
                         html.Small(f"+{(total_cp_2025/total_cp_2024-1)*100:.1f}% vs 2025", className="text-success"),
                     ])
-                ])
+                ], className="kpi-card shadow-sm")
             ], md=3),
             dbc.Col([
                 dbc.Card([
@@ -767,7 +767,7 @@ def create_budget_page():
                         html.H4(f"{total_ae_2025/1e9:.2f} Mds FCFA"),
                         html.Small(f"+{(total_ae_2025-total_ae_2024)/1e9:.2f} Mds", className="text-info"),
                     ])
-                ])
+                ], className="kpi-card shadow-sm")
             ], md=3),
             dbc.Col([
                 dbc.Card([
@@ -776,7 +776,7 @@ def create_budget_page():
                         html.H4(f"{total_cp_2025/1e9:.2f} Mds FCFA"),
                         html.Small(f"+{(total_cp_2025-total_cp_2024)/1e9:.2f} Mds", className="text-info"),
                     ])
-                ])
+                ], className="kpi-card shadow-sm")
             ], md=3),
         ], className="mb-4"),
 
@@ -939,7 +939,7 @@ def create_barometer_page():
                         html.H3(f"+{croissance_ae:.1f}%", className="text-success"),
                         html.P(f"{total_ae_2024/1e9:.2f} → {total_ae_2025/1e9:.2f} Mds", className="small text-muted"),
                     ])
-                ], className="shadow-sm")
+                ], className="shadow-sm kpi-card")
             ], md=3),
 
             dbc.Col([
@@ -949,7 +949,7 @@ def create_barometer_page():
                         html.H3(f"+{croissance_cp:.1f}%", className="text-success"),
                         html.P(f"{total_cp_2024/1e9:.2f} → {total_cp_2025/1e9:.2f} Mds", className="small text-muted"),
                     ])
-                ], className="shadow-sm")
+                ], className="shadow-sm kpi-card")
             ], md=3),
 
             dbc.Col([
@@ -959,7 +959,7 @@ def create_barometer_page():
                         html.H3(f"{n_lignes_2024} / {n_lignes_2025}"),
                         html.P("2024 / 2025", className="small text-muted"),
                     ])
-                ], className="shadow-sm")
+                ], className="shadow-sm kpi-card")
             ], md=3),
 
             dbc.Col([
@@ -969,7 +969,7 @@ def create_barometer_page():
                         html.H3("4"),
                         html.P("Axes stratégiques", className="small text-muted"),
                     ])
-                ], className="shadow-sm")
+                ], className="shadow-sm kpi-card")
             ], md=3),
         ], className="mb-4"),
 
@@ -1039,7 +1039,7 @@ def create_barometer_page():
                                                 dbc.CardBody(
                                                     html.Img(id="barometer-wc-pilier-0", style={"width": "100%"})
                                                 ),
-                                            ], className="shadow-sm"),
+                                            ], className="shadow-sm wordcloud-card"),
                                         ], md=6),
                                         dbc.Col([
                                             dbc.Card([
@@ -1047,7 +1047,7 @@ def create_barometer_page():
                                                 dbc.CardBody(
                                                     html.Img(id="barometer-wc-pilier-1", style={"width": "100%"})
                                                 ),
-                                            ], className="shadow-sm"),
+                                            ], className="shadow-sm wordcloud-card"),
                                         ], md=6),
                                     ], className="mb-3"),
                                     dbc.Row([
@@ -1057,7 +1057,7 @@ def create_barometer_page():
                                                 dbc.CardBody(
                                                     html.Img(id="barometer-wc-pilier-2", style={"width": "100%"})
                                                 ),
-                                            ], className="shadow-sm"),
+                                            ], className="shadow-sm wordcloud-card"),
                                         ], md=6),
                                         dbc.Col([
                                             dbc.Card([
@@ -1065,7 +1065,7 @@ def create_barometer_page():
                                                 dbc.CardBody(
                                                     html.Img(id="barometer-wc-pilier-3", style={"width": "100%"})
                                                 ),
-                                            ], className="shadow-sm"),
+                                            ], className="shadow-sm wordcloud-card"),
                                         ], md=6),
                                     ]),
                                 ],
@@ -1099,7 +1099,7 @@ def create_barometer_page():
                                         className="small text-muted"
                                     ),
                                 ])
-                            ], className="shadow-sm")
+                            ], className="shadow-sm kpi-card")
                         ], md=6),
                         dbc.Col([
                             dbc.Card([
@@ -1116,7 +1116,7 @@ def create_barometer_page():
                                         className="small text-muted"
                                     ),
                                 ])
-                            ], className="shadow-sm")
+                            ], className="shadow-sm kpi-card")
                         ], md=6),
                     ], className="mb-4"),
                     dcc.Graph(figure=fig_glissement),
@@ -1611,7 +1611,7 @@ def render_topic_details(year, topic_id):
                         html.H6("Statistiques :"),
                         html.P(f"{n_articles} articles associés (score > 0.3)"),
                     ])
-                ])
+                ], className="kpi-card shadow-sm")
             ], md=6),
 
             dbc.Col([
@@ -1623,7 +1623,7 @@ def render_topic_details(year, topic_id):
                             style={'width': '100%', 'height': 'auto'}
                         )
                     ])
-                ])
+                ], className="wordcloud-card shadow-sm")
             ], md=6),
         ]),
         html.Br(),
@@ -1890,7 +1890,7 @@ def create_clustering_year_content(year):
         return dbc.Card([
             dbc.CardHeader(html.H5(title), className=f"bg-{color} text-white"),
             dbc.CardBody(body),
-        ])
+        ], className="kpi-card shadow-sm")
 
     metrics_kmeans = _get_metrics(year, "kmeans")
     metrics_hdbscan = _get_metrics(year, "hdbscan")
@@ -1989,7 +1989,7 @@ def render_cluster_details(year, cluster_id):
                             for _, row in cluster_articles.head(3).iterrows()
                         ] if 'content' in cluster_articles.columns else [html.Li("Pas de contenu disponible")])
                     ])
-                ])
+                ], className="kpi-card shadow-sm")
             ], md=6),
 
             dbc.Col([
@@ -2001,7 +2001,7 @@ def render_cluster_details(year, cluster_id):
                             style={'width': '100%', 'height': 'auto'}
                         )
                     ])
-                ])
+                ], className="wordcloud-card shadow-sm")
             ], md=6),
         ])
     ])
@@ -2680,7 +2680,7 @@ def create_stats_tests():
                     className="text-muted"
                 ),
             ])
-        ], className="mb-4")
+        ], className="mb-4 kpi-card shadow-sm")
 
     mw_section = html.Div()
     if mw_df is not None and not mw_df.empty:
@@ -2707,7 +2707,7 @@ def create_stats_tests():
                     className="text-muted"
                 )
             ])
-        ], className="mb-4"),
+        ], className="mb-4 kpi-card shadow-sm"),
 
         chi2_section,
         mw_section,
