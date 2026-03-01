@@ -195,7 +195,7 @@ def load_all_data():
         if f.exists():
             data[f'articles_clusters_{year}'] = pd.read_excel(f)
 
-    # Tests statistiques
+    # Tests statistiques : charger d'abord les résultats Excel s'ils existent
     for fname, key in [
         ("chi2_piliers.xlsx", 'chi2'),
         ("test_mannwhitney.xlsx", 'mannwhitney'),
@@ -203,6 +203,80 @@ def load_all_data():
         f = REPORTS_DIR / fname
         if f.exists():
             data[key] = pd.read_excel(f)
+
+    # Si chi2_piliers.xlsx est absent mais que les articles avec topics sont disponibles,
+    # recalculer le test du Chi² directement à partir de ces fichiers Excel.
+    if "chi2" not in data:
+        df_2024 = data.get("articles_topics_2024")
+        df_2025 = data.get("articles_topics_2025")
+        if isinstance(df_2024, pd.DataFrame) and isinstance(df_2025, pd.DataFrame):
+            col = "pilier_dominant" if "pilier_dominant" in df_2024.columns and "pilier_dominant" in df_2025.columns else "dominant_topic"
+            if col in df_2024.columns and col in df_2025.columns:
+                try:
+                    from audit_semantique.stats.tests import StatisticalAnalyzer
+
+                    chi2_dict = StatisticalAnalyzer.test_chi2_piliers(df_2024, df_2025, col=col)
+                    chi2_results = pd.DataFrame([
+                        {
+                            "chi2": chi2_dict["chi2"],
+                            "p_value": chi2_dict["p_value"],
+                            "dof": chi2_dict["dof"],
+                            "significatif": chi2_dict["significatif"],
+                        }
+                    ])
+                    data["chi2"] = chi2_results
+                    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+                    chi2_results.to_excel(REPORTS_DIR / "chi2_piliers.xlsx", index=False)
+                except Exception:
+                    pass
+
+    # Distributions de topics (matrices doc x topic pour les tests/visualisations)
+    # Essayez d'abord de les déduire des fichiers Excel d'articles, sinon des .npy.
+    for year in [2024, 2025]:
+        key_articles = f"articles_topics_{year}"
+        df_art = data.get(key_articles)
+        topic_dists = None
+
+        if isinstance(df_art, pd.DataFrame) and not df_art.empty:
+            # 1) Cas idéal : colonnes de type topic_0, topic_1, ... avec probabilités
+            prob_cols = [
+                c for c in df_art.columns
+                if isinstance(c, str) and c.startswith("topic_") and c[len("topic_"):].isdigit()
+            ]
+            if prob_cols:
+                prob_cols_sorted = sorted(
+                    prob_cols,
+                    key=lambda c: int(c[len("topic_"):])
+                )
+                try:
+                    topic_dists = df_art[prob_cols_sorted].to_numpy(dtype=float)
+                except Exception:
+                    topic_dists = None
+
+            # 2) Fallback : seulement un topic dominant → matrice binaire 0/1
+            if topic_dists is None and "dominant_topic" in df_art.columns:
+                dominant = pd.to_numeric(df_art["dominant_topic"], errors="coerce")
+                n_docs = len(dominant)
+                if dominant.notna().any():
+                    n_topics = int(dominant.max()) + 1
+                    if n_topics > 0:
+                        mat = np.zeros((n_docs, n_topics), dtype=float)
+                        for i, t in enumerate(dominant):
+                            if pd.notna(t) and 0 <= int(t) < n_topics:
+                                mat[i, int(t)] = 1.0
+                        topic_dists = mat
+
+        if topic_dists is None:
+            # 3) Dernier recours : fichiers .npy s'ils existent déjà
+            npy_path = MODELS_DIR / f"topic_dists_{year}.npy"
+            if npy_path.exists():
+                try:
+                    topic_dists = np.load(npy_path)
+                except Exception:
+                    topic_dists = None
+
+        if topic_dists is not None:
+            data[f"topic_dists_{year}"] = topic_dists
 
     # Embeddings (vecteurs d'articles) + UMAP (projection 2D)
     emb_file_2024 = MODELS_DIR / "embeddings_2024.npy"
@@ -426,17 +500,7 @@ def extract_topic_words(topic_id, df_topics):
     Retourne une chaîne de mots pondérée (répétée selon la probabilité) pour WordCloud.
     """
     if df_topics is None or df_topics.empty:
-        # Distributions de topics (matrices doc x topic pour les tests/visualisations)
-        topic_dist_2024 = MODELS_DIR / "topic_dists_2024.npy"
-        topic_dist_2025 = MODELS_DIR / "topic_dists_2025.npy"
-        if topic_dist_2024.exists() and topic_dist_2025.exists():
-            try:
-                data["topic_dists_2024"] = np.load(topic_dist_2024)
-                data["topic_dists_2025"] = np.load(topic_dist_2025)
-            except Exception:
-                pass
-
-        return data
+        return ""
     words = []
     for i in range(10):
         col = f"word_{i}"
