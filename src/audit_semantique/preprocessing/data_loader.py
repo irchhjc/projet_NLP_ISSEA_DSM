@@ -11,6 +11,7 @@ import pandas as pd
 from loguru import logger
 
 from audit_semantique.config import PATH_LOI_2024, PATH_LOI_2025, MODELS_DIR
+from audit_semantique.preprocessing.text_cleaner import TextPreprocessor
 
 
 # Mapping des colonnes selon l'année (les JSONs peuvent varier légèrement)
@@ -95,7 +96,7 @@ def generate_and_save_embeddings(
         DataFrame contenant au minimum la colonne 'content'.
     annee : int
         Année de la loi (ex. 2024).
-    encoder : CamembertEncoder | None
+    encoder : SentenceTransformerEncoder | None
         Encoder à utiliser. Si None, un nouvel encoder sera créé.
     force : bool
         Si True, régénère les embeddings même s'ils existent déjà.
@@ -105,7 +106,7 @@ def generate_and_save_embeddings(
     np.ndarray de forme (n_articles, 768) contenant les embeddings.
     """
     # Import local pour éviter les dépendances circulaires
-    from audit_semantique.modeling.embeddings import CamembertEncoder
+    from audit_semantique.modeling.embeddings import SentenceTransformerEncoder
 
     embedding_name = f"loi_{annee}"
     embedding_path = MODELS_DIR / f"embeddings_{embedding_name}.npy"
@@ -119,12 +120,23 @@ def generate_and_save_embeddings(
 
     # Créer l'encoder si nécessaire
     if encoder is None:
-        logger.info("🔧 Création d'un nouvel encoder CamemBERT...")
-        encoder = CamembertEncoder()
+        logger.info("🔧 Création d'un nouvel encoder sentence-transformers...")
+        encoder = SentenceTransformerEncoder()
 
-    # Générer les embeddings
-    logger.info(f"⚙️  Génération des embeddings pour la loi de finances {annee}...")
-    texts = df["content"].fillna("").tolist()
+    # Générer les embeddings à partir de titre + contenu nettoyés
+    logger.info(f"⚙️  Génération des embeddings pour la loi de finances {annee} (titre + contenu)...")
+
+    prep = TextPreprocessor(lower=True, rm_accents=True)
+
+    if "cleaned_content" not in df.columns:
+        df["cleaned_content"] = prep.preprocess_series(df["content"])
+    if "cleaned_title" not in df.columns and "titre" in df.columns:
+        df["cleaned_title"] = prep.preprocess_series(df["titre"])
+
+    titles = df.get("cleaned_title", df.get("titre", "")).fillna("")
+    contents = df["cleaned_content"].fillna("")
+    texts = (titles + " [SEP] " + contents).str.strip().tolist()
+
     embeddings = encoder.encode(texts)
 
     # Sauvegarder
@@ -174,14 +186,14 @@ def generate_all_embeddings(force: bool = False) -> tuple[np.ndarray, np.ndarray
     (embeddings_2024, embeddings_2025) : tuple de np.ndarray.
     """
     # Import local pour éviter les dépendances circulaires
-    from audit_semantique.modeling.embeddings import CamembertEncoder
+    from audit_semantique.modeling.embeddings import SentenceTransformerEncoder
 
     # Charger les données
     loi_2024, loi_2025 = load_all()
     
     # Créer un seul encoder pour les deux années (pour réutiliser le modèle chargé)
-    logger.info("🔧 Initialisation de l'encoder CamemBERT...")
-    encoder = CamembertEncoder()
+    logger.info("🔧 Initialisation de l'encoder sentence-transformers...")
+    encoder = SentenceTransformerEncoder()
     
     # Générer les embeddings pour chaque année
     logger.info("\n" + "="*60)

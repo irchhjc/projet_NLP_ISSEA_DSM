@@ -8,6 +8,14 @@ from typing import Optional
 
 from loguru import logger
 
+try:
+    # Stopwords français standard de spaCy
+    from spacy.lang.fr import French
+    _SPACY_STOPWORDS_FR = set(French.Defaults.stop_words)
+except Exception:  # spaCy non dispo ou problème d'import
+    logger.warning("spaCy non disponible : utilisation uniquement des stopwords internes.")
+    _SPACY_STOPWORDS_FR = set()
+
 
 # ─── Patterns de nettoyage ────────────────────────────────────────────────────
 _URL_RE     = re.compile(r"https?://\S+")
@@ -19,18 +27,18 @@ _PUNCT_RE   = re.compile(
     flags=re.UNICODE,
 )
 
-# ─── Stopwords français enrichis ─────────────────────────────────────────────
-_STOPWORDS_FR: set[str] = set(
-    """a ai avons avez ont suis es est sommes êtes sont je tu il elle on nous vous
+# ─── Stopwords français (spaCy + stopwords métier) ───────────────────────────
+_CUSTOM_STOPWORDS_FR: set[str] = set(
+    """a ai avons avez ont suis es cfa de est sommes êtes sont je tu il elle on nous vous
     ils elles me te se y en du de des un une le la les au aux ce cet cette ces
     mon ton son ma ta sa mes tes ses notre votre leur nos vos leurs d l c j n qu
     ne pas plus pour et ou mais donc or ni car comme avec sans sous sur dans par
     vers entre chez que qui quoi dont où quand comment pourquoi très aussi encore
     bien mal trop moins même si très tout tous toutes puis parce afin alors fcfa num
-    sav promo commande livraison article www http ... """.split()
+    sav promo commande livraison article www http ..... """.split()
 )
 
-_STOPWORDS_FR.update(
+_CUSTOM_STOPWORDS_FR.update(
     {
         "premier", "deuxieme", "troisieme", "quatrieme", "cinquieme",
         "sixieme", "septieme", "huitieme", "neuvieme", "dixieme",
@@ -42,7 +50,9 @@ _STOPWORDS_FR.update(
     }
 )
 # Lettres singletons
-_STOPWORDS_FR.update({chr(i) for i in range(ord("a"), ord("z") + 1)})
+_CUSTOM_STOPWORDS_FR.update({chr(i) for i in range(ord("a"), ord("z") + 1)})
+
+_STOPWORDS_FR: set[str] = _SPACY_STOPWORDS_FR.union(_CUSTOM_STOPWORDS_FR)
 
 
 class TextPreprocessor:
@@ -119,7 +129,7 @@ class TextPreprocessor:
         n_empty = (cleaned == "").sum()
         if n_empty:
             logger.warning(f"{n_empty} textes vides après nettoyage.")
-        logger.info("✅ Préprocessing terminé.")
+        logger.info("Préprocessing terminé.")
         return cleaned
 
     def tokenize_for_lda(self, text: str, min_len: int = 3) -> list[str]:

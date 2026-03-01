@@ -1,6 +1,6 @@
 """
 modeling/embeddings.py
-Encodage des textes en vecteurs d'embeddings via CamemBERT.
+Encodage des textes en vecteurs d'embeddings (sentence-transformers).
 """
 from __future__ import annotations
 
@@ -10,113 +10,69 @@ from typing import List, Optional
 import numpy as np
 import torch
 from loguru import logger
-from transformers import CamembertModel, CamembertTokenizer
+from sentence_transformers import SentenceTransformer
 
-from audit_semantique.config import CAMEMBERT_MODEL, CAMEMBERT_PARAMS, MODELS_DIR
+from audit_semantique.config import (
+    SENTENCE_TRANSFORMER_MODEL,
+    EMBEDDING_PARAMS,
+    MODELS_DIR,
+)
 
 
-class CamembertEncoder:
-    """
-    Encode des textes en vecteurs denses (768 dims) avec CamemBERT.
+class SentenceTransformerEncoder:
+    """Encodeur basé sur sentence-transformers, optimisé pour similarités.
 
-    Le token [CLS] de la dernière couche cachée est utilisé comme
-    représentation de document.
-
-    Parameters
-    ----------
-    model_name : str
-        Identifiant HuggingFace du modèle (défaut : ``camembert-base``).
-    device : str | None
-        ``"cuda"`` ou ``"cpu"`` — détecté automatiquement si None.
+    Utilise par défaut le modèle multilingue
+    ``sentence-transformers/paraphrase-multilingual-mpnet-base-v2``
+    adapté au français.
     """
 
     def __init__(
         self,
-        model_name: str = CAMEMBERT_MODEL,
+        model_name: str = SENTENCE_TRANSFORMER_MODEL,
         device: Optional[str] = None,
     ) -> None:
         self.model_name = model_name
-        self.device = torch.device(
-            device if device else ("cuda" if torch.cuda.is_available() else "cpu")
-        )
-        logger.info(f"🖥️  Device détecté : {self.device}")
-        self._tokenizer: Optional[CamembertTokenizer] = None
-        self._model: Optional[CamembertModel] = None
-
-    # ── Chargement paresseux ──────────────────────────────────────────────────
+        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        logger.info(f"🖥️  Sentence-Transformers device : {self.device}")
+        self._model: Optional[SentenceTransformer] = None
 
     def _load(self) -> None:
         if self._model is not None:
             return
-        logger.info(f"📥 Chargement du modèle {self.model_name}...")
-        self._tokenizer = CamembertTokenizer.from_pretrained(self.model_name)
-        self._model = CamembertModel.from_pretrained(self.model_name).to(self.device)
-        self._model.eval()
-        logger.info("✅ Modèle prêt.")
-
-
-    @property
-    def tokenizer(self) -> CamembertTokenizer:
-        self._load()
-        return self._tokenizer  # type: ignore
-
-    @property
-    def model(self) -> CamembertModel:
-        self._load()
-        return self._model  # type: ignore
-
-    # ── Encodage ─────────────────────────────────────────────────────────────
+        logger.info(f"📥 Chargement du modèle sentence-transformers {self.model_name}...")
+        self._model = SentenceTransformer(self.model_name, device=self.device)
+        logger.info("✅ Modèle sentence-transformers prêt.")
 
     def encode(
         self,
         texts: List[str],
-        batch_size: int = CAMEMBERT_PARAMS["batch_size"],
-        max_length: int = CAMEMBERT_PARAMS["max_length"],
+        batch_size: int = EMBEDDING_PARAMS["batch_size"],
+        max_length: int = EMBEDDING_PARAMS["max_length"],
     ) -> np.ndarray:
-        """
-        Encode une liste de textes en embeddings.
+        """Encode une liste de textes en embeddings normalisés.
 
-        Parameters
-        ----------
-        texts : List[str]
-            Textes à encoder (déjà nettoyés).
-        batch_size : int
-            Taille des micro-batches.
-        max_length : int
-            Longueur max de séquence (tokens).
-
-        Returns
-        -------
-        np.ndarray de forme ``(n_textes, 768)``.
+        Retourne un ``np.ndarray`` de forme ``(n_textes, d)`` (d = 768).
+        Les vecteurs sont L2-normalisés, optimisés pour similarité cosinus.
         """
         self._load()
-        embeddings: list[np.ndarray] = []
+        assert self._model is not None
 
-        logger.info(f"🔄 Encodage de {len(texts)} textes...")
+        logger.info(f"🔄 Encodage (sentence-transformers) de {len(texts)} textes...")
 
-        with torch.no_grad():
-            for start in range(0, len(texts), batch_size):
-                batch = texts[start : start + batch_size]
-                encoded = self._tokenizer(
-                    batch,
-                    padding=True,
-                    truncation=True,
-                    max_length=max_length,
-                    return_tensors="pt",
-                )
-                encoded = {k: v.to(self.device) for k, v in encoded.items()}
-                outputs = self._model(**encoded)
-                # [CLS] token — première position de la dernière couche cachée
-                cls_emb = outputs.last_hidden_state[:, 0, :].cpu().numpy()
-                embeddings.append(cls_emb)
+        # Limite de longueur gérée au niveau du modèle
+        self._model.max_seq_length = max_length
 
-                done = min(start + batch_size, len(texts))
-                if done % (batch_size * 5) == 0 or done == len(texts):
-                    logger.info(f"  ✓ {done}/{len(texts)} textes traités")
+        embeddings = self._model.encode(
+            texts,
+            batch_size=batch_size,
+            show_progress_bar=True,
+            convert_to_numpy=True,
+            normalize_embeddings=True,
+        )
 
-        result = np.vstack(embeddings)
-        logger.info(f"✅ Encodage terminé : shape {result.shape}")
-        return result
+        logger.info(f"✅ Encodage sentence-transformers terminé : shape {embeddings.shape}")
+        return embeddings
 
     # ── Persistance ──────────────────────────────────────────────────────────
 
@@ -134,4 +90,22 @@ class CamembertEncoder:
             raise FileNotFoundError(f"Embeddings introuvables : {path}")
         emb = np.load(path)
         logger.info(f"📂 Embeddings chargés depuis {path} : shape {emb.shape}")
+        return emb
+
+    # Méthodes de persistance réutilisables pour SentenceTransformerEncoder
+
+    @staticmethod
+    def save(embeddings: np.ndarray, name: str) -> Path:
+        path = MODELS_DIR / f"embeddings_{name}.npy"
+        np.save(path, embeddings)
+        logger.info(f"💾 Embeddings (ST) sauvegardés → {path}")
+        return path
+
+    @staticmethod
+    def load(name: str) -> np.ndarray:
+        path = MODELS_DIR / f"embeddings_{name}.npy"
+        if not path.exists():
+            raise FileNotFoundError(f"Embeddings ST introuvables : {path}")
+        emb = np.load(path)
+        logger.info(f"📂 Embeddings (ST) chargés depuis {path} : shape {emb.shape}")
         return emb

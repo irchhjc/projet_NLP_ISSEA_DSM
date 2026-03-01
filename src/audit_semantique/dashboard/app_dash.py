@@ -864,7 +864,7 @@ def create_barometer_page():
             nbins=30,
             barmode='overlay',
             marginal='box',
-            title="Distribution des similarités cosinus par année (CamemBERT)",
+            title="Distribution des similarités cosinus par année (embeddings)",
         )
         fig_glissement.update_traces(opacity=0.65)
         fig_glissement.add_vline(
@@ -1030,7 +1030,7 @@ def create_barometer_page():
                 label="🧭 Glissement sémantique",
                 children=[
                     html.Br(),
-                    html.H4("🧭 Baromètre de glissement sémantique (CamemBERT)", className="mb-3"),
+                    html.H4("🧭 Baromètre de glissement sémantique (embeddings)", className="mb-3"),
                     dbc.Row([
                         dbc.Col([
                             dbc.Card([
@@ -1078,7 +1078,7 @@ def create_barometer_page():
                     html.Br(),
                     html.H4("🗺️ Visualisation des embeddings (UMAP)", className="mb-3"),
                     dbc.Alert(
-                        "Projection 2D des vecteurs d'embedding CamemBERT. Survolez un point pour voir l'ID/titre (si disponible).",
+                        "Projection 2D des vecteurs d'embedding (sentence-transformers). Survolez un point pour voir l'ID/titre (si disponible).",
                         color="secondary",
                         className="mb-3",
                     ),
@@ -1474,9 +1474,162 @@ def create_clustering_year_content(year):
 
     if 'cluster_kmeans' not in clusters_df.columns:
         return dbc.Alert("⚠️ Colonne cluster_kmeans non trouvée", color="warning")
-
     n_clusters = clusters_df['cluster_kmeans'].nunique()
 
+    # ── Répartition des articles par cluster (sans UMAP) ──────────────────
+    # K-Means : nombre d'articles dans chaque cluster
+    km_counts = clusters_df['cluster_kmeans'].value_counts().sort_index()
+    fig_kmeans = px.bar(
+        x=km_counts.index.astype(str),
+        y=km_counts.values,
+        labels={"x": "Cluster K-Means", "y": "Nombre d'articles"},
+        title=f"Répartition des articles par cluster K-Means ({year})",
+    )
+
+    # HDBSCAN : nombre d'articles par cluster (incluant le bruit -1)
+    fig_hdbscan = go.Figure()
+    if 'cluster_hdbscan' in clusters_df.columns:
+        hdb_counts = clusters_df['cluster_hdbscan'].value_counts().sort_index()
+        fig_hdbscan = px.bar(
+            x=hdb_counts.index.astype(str),
+            y=hdb_counts.values,
+            labels={"x": "Cluster HDBSCAN (-1 = bruit)", "y": "Nombre d'articles"},
+            title=f"Répartition des articles par cluster HDBSCAN ({year})",
+        )
+    else:
+        fig_hdbscan.add_annotation(
+            text="Labels HDBSCAN non disponibles pour cette année.",
+            xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False,
+        )
+        fig_hdbscan.update_xaxes(visible=False)
+        fig_hdbscan.update_yaxes(visible=False)
+
+    # ── Courbe du coude (inertie K-Means) ─────────────────────────────────
+    from sklearn.cluster import KMeans  # import local pour éviter le coût global
+
+    fig_elbow = go.Figure()
+    emb_key = f"embeddings_{year}"
+    X = DATA.get(emb_key)
+    if isinstance(X, np.ndarray) and X.shape[0] >= 3:
+        max_k = max(2, min(10, X.shape[0] - 1))
+        ks: list[int] = []
+        inertias: list[float] = []
+        for k in range(2, max_k + 1):
+            try:
+                km = KMeans(n_clusters=k, random_state=42, n_init=10)
+                km.fit(X)
+                ks.append(k)
+                inertias.append(float(km.inertia_))
+            except Exception:
+                continue
+        if ks:
+            fig_elbow.add_trace(
+                go.Scatter(
+                    x=ks,
+                    y=inertias,
+                    mode="lines+markers",
+                    name="Inertie intra-cluster",
+                )
+            )
+            fig_elbow.update_layout(
+                title=f"Règle du coude — K-Means ({year})",
+                xaxis_title="Nombre de clusters k",
+                yaxis_title="Inertie",
+            )
+        else:
+            fig_elbow.add_annotation(
+                text="Impossible de calculer l'inertie (données insuffisantes).",
+                xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False,
+            )
+            fig_elbow.update_xaxes(visible=False)
+            fig_elbow.update_yaxes(visible=False)
+    else:
+        fig_elbow.add_annotation(
+            text="Embeddings non disponibles pour cette année.",
+            xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False,
+        )
+        fig_elbow.update_xaxes(visible=False)
+        fig_elbow.update_yaxes(visible=False)
+
+    # ── Métriques de performance des clusters ─────────────────────────────
+
+    def _get_metrics(year_: int, algo: str) -> dict:
+        """Récupère (avec cache) les métriques de clustering pour une année / algo."""
+        cache_key = (year_, algo)
+        if cache_key in _CLUSTER_METRICS_CACHE:
+            return _CLUSTER_METRICS_CACHE[cache_key]
+
+        emb_key = f"embeddings_{year_}"
+        X = DATA.get(emb_key)
+        if X is None:
+            return {}
+
+        col = f"cluster_{algo}"
+        if col not in clusters_df.columns:
+            return {}
+
+        labels = clusters_df[col].to_numpy()
+        n = min(len(X), len(labels))
+        if n < 3:
+            return {}
+
+        metrics = _cluster_metrics(X[:n], labels[:n])
+        _CLUSTER_METRICS_CACHE[cache_key] = metrics
+        return metrics
+
+    def _metrics_card(title: str, metrics: dict, color: str) -> dbc.Card:
+        def fmt(x):
+            if x is None:
+                return "N/A"
+            try:
+                if isinstance(x, (int, float)) and not np.isfinite(x):
+                    return "N/A"
+                return f"{x:.3f}" if isinstance(x, float) else str(x)
+            except Exception:
+                return str(x)
+
+        n_points = metrics.get("n_points")
+        n_clusters = metrics.get("n_clusters")
+        pct_noise = metrics.get("pct_noise")
+        sil = metrics.get("silhouette")
+        db = metrics.get("davies_bouldin")
+        ch = metrics.get("calinski_harabasz")
+
+        body = [
+            html.P(f"Nombre de points : {fmt(n_points)}"),
+            html.P(f"Nombre de clusters : {fmt(n_clusters)}"),
+        ]
+        if pct_noise is not None:
+            body.append(html.P(f"Bruit: {fmt(pct_noise)}%"))
+        body.extend([
+            html.Hr(),
+            html.P(f"Silhouette : {fmt(sil)}"),
+            html.P(f"Davies-Bouldin : {fmt(db)}"),
+            html.P(f"Calinski-Harabasz : {fmt(ch)}"),
+        ])
+
+        return dbc.Card([
+            dbc.CardHeader(html.H5(title), className=f"bg-{color} text-white"),
+            dbc.CardBody(body),
+        ])
+
+    metrics_kmeans = _get_metrics(year, "kmeans")
+    metrics_hdbscan = _get_metrics(year, "hdbscan")
+
+    metrics_row = dbc.Row([
+        dbc.Col([
+            _metrics_card("K-Means", metrics_kmeans, "primary")
+            if metrics_kmeans else
+            dbc.Alert("Métriques K-Means non disponibles.", color="warning"),
+        ], md=6),
+        dbc.Col([
+            _metrics_card("HDBSCAN", metrics_hdbscan, "info")
+            if metrics_hdbscan else
+            dbc.Alert("Métriques HDBSCAN non disponibles.", color="warning"),
+        ], md=6),
+    ], className="mb-4")
+
+    # ── Sélecteur de cluster + détails (K-Means) ───────────────────────────
     cluster_selector = dbc.Row([
         dbc.Col([
             html.Label(f"Sélectionnez un cluster K-Means {year} :"),
@@ -1485,12 +1638,21 @@ def create_clustering_year_content(year):
                 options=[{'label': f'Cluster {i}', 'value': i} for i in range(n_clusters)],
                 value=0,
                 clearable=False
-            )
-        ], md=6)
+            ),
+        ], md=6),
     ], className="mb-4")
 
     return html.Div([
-        html.H3(f"K-Means Clustering - {year}", className="mb-3"),
+        html.H3(f"Clustering des articles - {year}", className="mb-3"),
+        dbc.Row([
+            dbc.Col([dcc.Graph(figure=fig_kmeans)], md=6),
+            dbc.Col([dcc.Graph(figure=fig_hdbscan)], md=6),
+        ], className="mb-4"),
+        html.H4("Règle du coude (inertie K-Means)", className="mb-3"),
+        dcc.Graph(figure=fig_elbow),
+        html.H4("Métriques de performance des clusters", className="mb-3 mt-4"),
+        metrics_row,
+        html.Hr(),
         cluster_selector,
         html.Div(id=f'cluster-details-{year}')
     ])
@@ -1524,11 +1686,11 @@ def render_cluster_details(year, cluster_id):
     cluster_text = get_cluster_texts(clusters_df, cluster_id)
     wordcloud_img = create_wordcloud(cluster_text, colormap='plasma', max_words=50)
 
+    pilier_dominant: str | None = None
     if 'pilier_dominant' in cluster_articles.columns:
-        pilier_counts = cluster_articles['pilier_dominant'].value_counts()
-        pilier_dominant = pilier_counts.index[0] if len(pilier_counts) > 0 else "N/A"
-    else:
-        pilier_dominant = "N/A"
+        pilier_counts = cluster_articles['pilier_dominant'].dropna().value_counts()
+        if len(pilier_counts) > 0:
+            pilier_dominant = str(pilier_counts.index[0])
 
     return html.Div([
         dbc.Row([
@@ -1538,7 +1700,9 @@ def render_cluster_details(year, cluster_id):
                     dbc.CardBody([
                         html.H6("Statistiques :"),
                         html.P(f"📄 {n_articles} articles"),
-                        html.P(f"🎯 Pilier dominant: {pilier_dominant}"),
+                        *([
+                            html.P(f"🎯 Pilier dominant : {pilier_dominant}")
+                        ] if pilier_dominant else []),
                         html.Hr(),
                         html.H6("Exemples d'articles :"),
                         html.Ul([
@@ -2006,7 +2170,7 @@ def update_barometer_umap(selected_years, selected_clusters, selected_titles):
         y="y",
         color="annee",
         hover_data=hover_cols if hover_cols else None,
-        title="UMAP des embeddings CamemBERT (articles 2024 vs 2025)",
+        title="UMAP des embeddings (articles 2024 vs 2025)",
     )
     fig.update_traces(marker=dict(size=8, opacity=0.65))
     fig.update_layout(height=650, legend_title_text="Année")

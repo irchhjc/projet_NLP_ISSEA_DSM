@@ -26,35 +26,33 @@ for _dir in [PROCESSED_DIR, FIGURES_DIR, MODELS_DIR, REPORTS_DIR]:
     _dir.mkdir(parents=True, exist_ok=True)
 
 # ─── Modèles ──────────────────────────────────────────────────────────────────
-CAMEMBERT_MODEL      = "camembert-base"
+SENTENCE_TRANSFORMER_MODEL = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
 ZERO_SHOT_MODEL      = "MoritzLaurer/mDeBERTa-v3-base-mnli-xnli"
 
-# ─── Hyperparamètres CamemBERT ────────────────────────────────────────────────
-CAMEMBERT_PARAMS = {
-    "batch_size":  8, # nombre d'article a traiter simultanément
-    "max_length":  512, # longueur maximale des séquences
-    "lr":          2e-5, # taux d'apprentissage
-    "num_epochs":  3, # nombre d'époques
+# ─── Hyperparamètres embeddings ──────────────────────────────────────────────
+EMBEDDING_PARAMS = {
+    "batch_size":  8,   # nombre d'articles à traiter simultanément
+    "max_length":  1000, # longueur maximale des séquences
 }
 
 # ─── Hyperparamètres Zero-Shot ────────────────────────────────────────────────
 ZERO_SHOT_PARAMS = {
     "batch_size":  8, # nombre d'article a traiter simultanément
-    "max_length":  256, # longueur maximale des séquences
+    "max_length":  1000, # longueur maximale des séquences
     "multi_label": True, # classification multi-label (un article peut appartenir à plusieurs piliers)
 }
 
 # ─── Piliers SND30 ────────────────────────────────────────────────────────────
 # Utiliser pour l'entainement du modèle de classification zero-shot et pour l'évaluation
 PILIERS_SND30 = [
-    "Transformation structurelle de l'économie pour accélérer la croissance",
+    "Transformation structurelle de l'économie pour accélérer la croissance economique",
     "Développement du capital humain et du bien-être social",
     "Promotion de l'emploi et de l'insertion socio-économique",
     "Gouvernance, décentralisation et gestion stratégique de l'État",
 ]
 ## Utiliser pour la visualisation
 PILIERS_COURT = [
-    "Transformation économique",
+    "Transformation structurelle",
     "Capital humain",
     "Emploi et insertion",
     "Gouvernance et décentralisation",

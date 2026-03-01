@@ -23,7 +23,7 @@ from loguru import logger
 
 from audit_semantique.preprocessing.data_loader import load_all
 from audit_semantique.preprocessing.text_cleaner import TextPreprocessor
-from audit_semantique.modeling.embeddings import CamembertEncoder
+from audit_semantique.modeling.embeddings import SentenceTransformerEncoder
 from audit_semantique.audit.semantic_audit import AuditeurSemantique
 from audit_semantique.topic_modeling.lda_model import LDATopicModeler
 from audit_semantique.clustering.clusterer import DocumentClusterer
@@ -147,10 +147,14 @@ def main():
         logger.info("\n🧹 ÉTAPE 2 - Prétraitement des textes")
         
         prep = TextPreprocessor(lower=True, rm_accents=True)
+        # Nettoyage du contenu
         loi_2024["cleaned_content"] = prep.preprocess_series(loi_2024["content"])
         loi_2025["cleaned_content"] = prep.preprocess_series(loi_2025["content"])
-        
-        logger.info("  ✅ Textes nettoyés")
+        # Nettoyage des titres
+        loi_2024["cleaned_title"] = prep.preprocess_series(loi_2024["titre"])
+        loi_2025["cleaned_title"] = prep.preprocess_series(loi_2025["titre"])
+
+        logger.info("Textes et titres nettoyés")
         pbar.update(1)
         time.sleep(0.5)
         
@@ -158,27 +162,34 @@ def main():
         # ÉTAPE 3 : GÉNÉRATION DES EMBEDDINGS
         # ═════════════════════════════════════════════════════════════════
         pbar.set_description("🤖 Génération des embeddings")
-        logger.info("\n🤖 ÉTAPE 3 - Génération des embeddings CamemBERT")
-        
-        encoder = CamembertEncoder()
-        
-        # Charger ou calculer embeddings
+        logger.info("\n🤖 ÉTAPE 3 - Génération des embeddings (sentence-transformers)")
+
+        encoder = SentenceTransformerEncoder()
+
+        # Toujours recalculer les embeddings et écraser les anciens fichiers
         emb_file_2024 = MODELS_DIR / "embeddings_2024.npy"
         emb_file_2025 = MODELS_DIR / "embeddings_2025.npy"
-        
-        if emb_file_2024.exists() and emb_file_2025.exists():
-            logger.info("  📥 Chargement des embeddings existants...")
-            emb_2024 = np.load(emb_file_2024)
-            emb_2025 = np.load(emb_file_2025)
-        else:
-            logger.info("  🔄 Calcul des embeddings sur les articles des lois de finances...")
-            emb_2024 = encoder.encode(loi_2024["cleaned_content"].tolist())  # articles loi 2024
-            emb_2025 = encoder.encode(loi_2025["cleaned_content"].tolist())  # articles loi 2025
-            
-            # Sauvegarder
-            MODELS_DIR.mkdir(parents=True, exist_ok=True)
-            np.save(emb_file_2024, emb_2024)
-            np.save(emb_file_2025, emb_2025)
+
+        logger.info(
+            "  🔄 Calcul des embeddings sur titre + contenu nettoyés (les fichiers existants seront écrasés)..."
+        )
+        texts_2024 = (
+            loi_2024["cleaned_title"].fillna("")
+            + " [SEP] "
+            + loi_2024["cleaned_content"].fillna("")
+        ).str.strip()
+        texts_2025 = (
+            loi_2025["cleaned_title"].fillna("")
+            + " [SEP] "
+            + loi_2025["cleaned_content"].fillna("")
+        ).str.strip()
+
+        emb_2024 = encoder.encode(texts_2024.tolist())  # articles loi 2024
+        emb_2025 = encoder.encode(texts_2025.tolist())  # articles loi 2025
+
+        MODELS_DIR.mkdir(parents=True, exist_ok=True)
+        np.save(emb_file_2024, emb_2024)
+        np.save(emb_file_2025, emb_2025)
         
         logger.info(f"  ✅ Embeddings : 2024 {emb_2024.shape}, 2025 {emb_2025.shape}")
         pbar.update(1)
