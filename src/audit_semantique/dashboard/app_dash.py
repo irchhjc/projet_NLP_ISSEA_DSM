@@ -528,14 +528,43 @@ def create_wordcloud(text, colormap='viridis', max_words=50):
 
 def extract_topic_words(topic_id, df_topics):
     """
-    Extrait les mots d'un topic depuis un DataFrame LDA au format long.
+    Extrait les mots d'un topic pour construire un nuage de mots.
 
-    Le DataFrame ``df_topics`` doit avoir les colonnes : topic, word, probability.
-    Retourne une chaîne de mots pondérée (répétée selon la probabilité) pour WordCloud.
+    Gère deux formats de DataFrame LDA :
+      1) Format long : colonnes [topic, word, probability]
+      2) Format "large" : colonnes word_0, word_1, ...
+
+    Retourne une chaîne de mots (avec répétition pondérée quand possible).
     """
     if df_topics is None or df_topics.empty:
         return ""
-    words = []
+
+    # 1) Format long : topic / word / probability
+    if "word" in df_topics.columns and "topic" in df_topics.columns:
+        sub = df_topics[df_topics["topic"] == topic_id].copy()
+        if sub.empty:
+            return ""
+        words_col = sub["word"].astype(str)
+        if "probability" in sub.columns:
+            try:
+                probs = pd.to_numeric(sub["probability"], errors="coerce").fillna(0.0)
+            except Exception:
+                probs = pd.Series([1.0] * len(sub), index=sub.index)
+            sub = sub.assign(probability=probs)
+            sub = sub.sort_values("probability", ascending=False).head(40)
+            if sub["probability"].max() > 0:
+                weights = (sub["probability"] / sub["probability"].max() * 8).clip(1, 8).astype(int)
+            else:
+                weights = pd.Series([1] * len(sub), index=sub.index)
+            tokens: list[str] = []
+            for w, k in zip(sub["word"].astype(str), weights):
+                tokens.extend([w] * int(k))
+            return " ".join(tokens)
+        # Pas de probabilité : chaque mot une fois
+        return " ".join(words_col.tolist())
+
+    # 2) Ancien format "large" : word_0, word_1, ...
+    words: list[str] = []
     for i in range(10):
         col = f"word_{i}"
         if col in df_topics.columns:
