@@ -113,6 +113,11 @@ def _map_pilier(val) -> str:
     return PILIER_MAP.get(str(val), str(val))
 
 
+def _safe_numeric(series: pd.Series) -> pd.Series:
+    """Convertit une série en numérique (NaN si impossible)."""
+    return pd.to_numeric(series, errors="coerce")
+
+
 def _gini(x: np.ndarray | pd.Series) -> float:
     """Coefficient de Gini (copié de la logique du dashboard principal)."""
     arr = np.asarray(x, dtype=float)
@@ -793,6 +798,10 @@ def _tab_adequation(d: dict) -> html.Div:
     obj24 = d.get("obj_24", pd.DataFrame())
     obj25 = d.get("obj_25", pd.DataFrame())
     sim_df = d.get("sim_df", pd.DataFrame())
+    chi2_df = d.get("chi2_results", pd.DataFrame())
+    mw_df = d.get("mw_results", pd.DataFrame())
+
+    seuil_sim = 0.70
 
     # ── 1. Portrait budgétaire global ─────────────────────────────────────
     ae24 = ae25 = cp24 = cp25 = np.nan
@@ -868,6 +877,96 @@ def _tab_adequation(d: dict) -> html.Div:
             title="Portrait macrobudgétaire 2024 vs 2025",
             barmode="group",
             height=520,
+        )
+
+    # KPIs de synthèse (croissance AE/CP, objectifs, similarité)
+    kpi_cards: list[dbc.Col] = []
+    if not np.isnan(ae24) and not np.isnan(ae25):
+        croissance_ae = (ae25 / ae24 - 1.0) * 100.0 if ae24 > 0 else np.nan
+        kpi_cards.append(
+            dbc.Col(
+                _kpi_card(
+                    "AE totales",
+                    f"{ae24:.1f} → {ae25:.1f}",
+                    subtitle=f"Croissance AE ≈ {croissance_ae:.1f}% (Mds FCFA)" if np.isfinite(croissance_ae) else "Croissance AE non calculable",
+                    color=YEAR_COLORS["2025"],
+                ),
+                md=3,
+            )
+        )
+    if not np.isnan(cp24) and not np.isnan(cp25):
+        croissance_cp = (cp25 / cp24 - 1.0) * 100.0 if cp24 > 0 else np.nan
+        kpi_cards.append(
+            dbc.Col(
+                _kpi_card(
+                    "CP totaux",
+                    f"{cp24:.1f} → {cp25:.1f}",
+                    subtitle=f"Croissance CP ≈ {croissance_cp:.1f}% (Mds FCFA)" if np.isfinite(croissance_cp) else "Croissance CP non calculable",
+                    color=YEAR_COLORS["2024"],
+                ),
+                md=3,
+            )
+        )
+
+    # Nombre d'objectifs classifiés par année
+    n_obj_24 = len(obj24) if isinstance(obj24, pd.DataFrame) and not obj24.empty else 0
+    n_obj_25 = len(obj25) if isinstance(obj25, pd.DataFrame) and not obj25.empty else 0
+    if n_obj_24 or n_obj_25:
+        kpi_cards.append(
+            dbc.Col(
+                _kpi_card(
+                    "Objectifs classifiés",
+                    f"{n_obj_24} / {n_obj_25}",
+                    subtitle="Nombre d'objectifs SND30 (2024 / 2025)",
+                    color="#0f766e",
+                ),
+                md=3,
+            )
+        )
+
+    # Similarité moyenne & % sous seuil
+    mean_sim_24 = mean_sim_25 = pct_ss_24 = pct_ss_25 = np.nan
+    if isinstance(sim_df, pd.DataFrame) and not sim_df.empty:
+        score_col = None
+        if "score_max_similarite" in sim_df.columns:
+            score_col = "score_max_similarite"
+        elif "similarity" in sim_df.columns:
+            score_col = "similarity"
+        if score_col:
+            sims = sim_df.dropna(subset=[score_col]).copy()
+            if "annee" not in sims.columns and "year" in sims.columns:
+                sims["annee"] = sims["year"]
+            if "annee" in sims.columns:
+                s24 = sims[sims["annee"] == 2024][score_col]
+                s25 = sims[sims["annee"] == 2025][score_col]
+                if not s24.empty:
+                    mean_sim_24 = float(s24.mean())
+                    pct_ss_24 = float((s24 < seuil_sim).mean() * 100.0)
+                if not s25.empty:
+                    mean_sim_25 = float(s25.mean())
+                    pct_ss_25 = float((s25 < seuil_sim).mean() * 100.0)
+    if not np.isnan(mean_sim_24) or not np.isnan(mean_sim_25):
+        val_txt = " / ".join(
+            [
+                _safe(mean_sim_24, ".3f") if not np.isnan(mean_sim_24) else "—",
+                _safe(mean_sim_25, ".3f") if not np.isnan(mean_sim_25) else "—",
+            ]
+        )
+        subtitle = []
+        if not np.isnan(pct_ss_24):
+            subtitle.append(f"2024 : {pct_ss_24:.1f}% sous θ={seuil_sim:.2f}")
+        if not np.isnan(pct_ss_25):
+            subtitle.append(f"2025 : {pct_ss_25:.1f}% sous θ={seuil_sim:.2f}")
+        kpi_cards.append(
+            dbc.Col(
+                _kpi_card(
+                    "Similarité moyenne",
+                    val_txt,
+                    subtitle=" · ".join(subtitle),
+                    color="#7c3aed",
+                ),
+                md=3,
+            )
         )
 
     # ── 2. Adéquation SND30 des objectifs ─────────────────────────────────
@@ -960,6 +1059,7 @@ def _tab_adequation(d: dict) -> html.Div:
     # ── 3. Glissement sémantique & concentration ──────────────────────────
     fig_sim = go.Figure()
     fig_lorenz = go.Figure()
+    fig_tests_summary = go.Figure()
     if isinstance(sim_df, pd.DataFrame) and not sim_df.empty:
         score_col = None
         if "score_max_similarite" in sim_df.columns:
@@ -1003,11 +1103,47 @@ def _tab_adequation(d: dict) -> html.Div:
             height=420,
         )
 
+    # Synthèse des tests (répartition des p-values)
+    tests_p: list[float] = []
+    if isinstance(chi2_df, pd.DataFrame) and not chi2_df.empty and "p_value" in chi2_df.columns:
+        tests_p.extend([float(p) for p in chi2_df["p_value"].dropna().tolist()])
+    if isinstance(mw_df, pd.DataFrame) and not mw_df.empty and "p_value" in mw_df.columns:
+        tests_p.extend([float(p) for p in mw_df["p_value"].dropna().tolist()])
+
+    if tests_p:
+        sig_001 = sum(1 for p in tests_p if p < 0.001)
+        sig_01 = sum(1 for p in tests_p if 0.001 <= p < 0.01)
+        sig_05 = sum(1 for p in tests_p if 0.01 <= p < 0.05)
+        non_sig = sum(1 for p in tests_p if p >= 0.05)
+        labels = [
+            f"p<0.001 (***) n={sig_001}",
+            f"p<0.01 (**) n={sig_01}",
+            f"p<0.05 (*) n={sig_05}",
+            f"n.s. n={non_sig}",
+        ]
+        sizes = [sig_001, sig_01, sig_05, non_sig]
+        if sum(sizes) > 0:
+            fig_tests_summary = go.Figure(
+                data=[
+                    go.Pie(
+                        labels=[l for l, s in zip(labels, sizes) if s > 0],
+                        values=[s for s in sizes if s > 0],
+                        hole=0.4,
+                    )
+                ]
+            )
+            fig_tests_summary.update_layout(
+                title=f"Bilan des tests (n={len(tests_p)})",
+                template="plotly_white",
+                height=380,
+            )
+
     return html.Div([
         _section_header(
             "Adéquation budgétaire et sémantique",
             "Synthèse 2024–2025 : budget AE/CP, alignement SND30 des objectifs et stabilité du langage budgétaire.",
         ),
+        (dbc.Row(kpi_cards, className="gy-3 mb-4") if kpi_cards else html.Div()),
         dbc.Row([
             dbc.Col(dcc.Graph(figure=fig_macro), md=12),
         ], className="mb-4"),
@@ -1022,6 +1158,16 @@ def _tab_adequation(d: dict) -> html.Div:
         dbc.Row([
             dbc.Col(dcc.Graph(figure=fig_sim), md=6),
             dbc.Col(dcc.Graph(figure=fig_lorenz), md=6),
+        ]),
+        html.Hr(className="my-4"),
+        _section_header("Bilan des tests de significativité"),
+        dbc.Row([
+            dbc.Col(
+                dcc.Graph(figure=fig_tests_summary)
+                if fig_tests_summary.data
+                else dbc.Alert("Résultats de tests indisponibles pour la synthèse.", color="secondary"),
+                md=6,
+            ),
         ]),
     ])
 
