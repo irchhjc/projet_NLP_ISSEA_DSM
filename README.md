@@ -184,7 +184,7 @@ poetry run python scripts/run_dash.py
 
 ## 7. Équipe projet
 
-Ce projet a été réalisé par un groupe d’étudiants de l’ISSEA (CEMAC) :
+Ce projet réalisé par :
 
 - **NGOULOU NGOUBILI Irch Defluviaire**
 - **NOFOZO Sylvain**
