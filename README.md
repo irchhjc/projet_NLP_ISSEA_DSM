@@ -193,5 +193,5 @@ Ce projet réalisé par :
 
 Superviseur : **MBIA NDI Marie Thérèse**
 
-Promotion ISEL5‑DSM, ISSEA‑CEMAC.
+Promotion ISEL5‑DSM 2026, ISSEA‑CEMAC.
 
