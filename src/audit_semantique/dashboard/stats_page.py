@@ -796,3 +796,48 @@ def register_stats_callbacks(app, DATA: dict) -> None:
             return _tab_clustering(d_cache)
         # fallback
         return _tab_overview(d_cache)
+
+
+def create_synthesis_page(DATA: dict) -> html.Div:
+    """Page de synthèse regroupant les principaux graphiques du notebook.
+
+    Cette vue assemble en une seule page les éléments clés déjà utilisés
+    dans les onglets avancés :
+      - Vue d'ensemble budgétaire et piliers
+      - Glissement sémantique (similarités embeddings)
+      - Évolution thématique (topics dominants)
+      - Clustering (structure des groupes d'articles)
+
+    Elle est pensée comme une page de présentation synthétique pour
+    décideurs, sans contrôles interactifs supplémentaires.
+    """
+    d_cache = _load_stats_data(DATA)
+
+    overview_section = _tab_overview(d_cache)
+    semantic_section = _tab_semantic(d_cache)
+    thematic_section = _tab_thematic(d_cache)
+    clustering_section = _tab_clustering(d_cache)
+
+    return html.Div(
+        [
+            html.H1(
+                "Synthèse Analytique 2024–2025",
+                className="mb-1",
+                style={"fontWeight": 800, "color": "#1e3a5f"},
+            ),
+            html.P(
+                "Résumé visuel des principaux résultats de l'audit sémantique "
+                "et budgétaire (budget, similarité, thèmes, clusters).",
+                className="text-muted mb-4",
+                style={"fontSize": "0.95rem", "fontStyle": "italic"},
+            ),
+            overview_section,
+            html.Hr(className="my-5"),
+            semantic_section,
+            html.Hr(className="my-5"),
+            thematic_section,
+            html.Hr(className="my-5"),
+            clustering_section,
+        ],
+        className="page-container page-stats",
+    )

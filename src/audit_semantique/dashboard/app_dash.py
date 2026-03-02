@@ -38,12 +38,14 @@ from audit_semantique.config import (
 try:
     from audit_semantique.dashboard.stats_page import (
         create_stats_page as _create_stats_page_advanced,
+        create_synthesis_page as _create_synthesis_page_advanced,
         register_stats_callbacks,
     )
 
     _ADVANCED_STATS = True
 except Exception:
     _ADVANCED_STATS = False
+    _create_synthesis_page_advanced = None  # type: ignore[assignment]
 
 # Cache léger pour éviter de régénérer les nuages de mots à chaque interaction
 _BAROMETER_WC_CACHE: dict[tuple[str, str], str] = {}
@@ -605,6 +607,7 @@ navbar = dbc.Navbar(
             dbc.Nav(
                 [
                     dbc.NavLink("Accueil", href="/", active="exact", className="top-nav-link"),
+                    dbc.NavLink("Synthèse", href="/synthese", active="exact", className="top-nav-link"),
                     dbc.NavLink("Baromètre", href="/barometer", active="exact", className="top-nav-link"),
                     dbc.NavLink("Classification SND30", href="/classification", active="exact", className="top-nav-link"),
                     dbc.NavLink("Topic Modeling", href="/topics", active="exact", className="top-nav-link"),
@@ -1378,6 +1381,11 @@ def display_page(pathname):
     elif pathname == '/classification':
         return create_classification_page()
     elif pathname == '/barometer':
+        return create_barometer_page()
+    elif pathname == '/synthese':
+        if _ADVANCED_STATS and _create_synthesis_page_advanced is not None:
+            return _create_synthesis_page_advanced(DATA)
+        # Fallback minimal : réutiliser la page Baromètre comme synthèse
         return create_barometer_page()
     elif pathname == '/stats':
         if _ADVANCED_STATS:
