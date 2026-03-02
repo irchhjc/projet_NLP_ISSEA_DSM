@@ -25,7 +25,12 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 from scipy.stats import (
-    chi2_contingency, mannwhitneyu, ks_2samp, shapiro, ttest_ind,
+    chi2_contingency,
+    mannwhitneyu,
+    ks_2samp,
+    shapiro,
+    ttest_ind,
+    spearmanr,
 )
 from dash import dcc, html, Input, Output
 import dash_bootstrap_components as dbc
@@ -106,6 +111,33 @@ def _safe(val, fmt=".2f"):
 
 def _map_pilier(val) -> str:
     return PILIER_MAP.get(str(val), str(val))
+
+
+def _gini(x: np.ndarray | pd.Series) -> float:
+    """Coefficient de Gini (copié de la logique du dashboard principal)."""
+    arr = np.asarray(x, dtype=float)
+    arr = arr[np.isfinite(arr) & (arr >= 0)]
+    if arr.size == 0:
+        return float("nan")
+    if np.all(arr == 0):
+        return 0.0
+    arr_sorted = np.sort(arr)
+    n = arr_sorted.size
+    cum = np.cumsum(arr_sorted)
+    return float((2.0 * np.sum((np.arange(1, n + 1) * arr_sorted)) / (n * cum[-1]) - (n + 1) / n))
+
+
+def _lorenz_curve(x: np.ndarray | pd.Series) -> tuple[np.ndarray, np.ndarray]:
+    """Retourne (x_lorenz, y_lorenz) pour la courbe de Lorenz normalisée."""
+    arr = np.asarray(x, dtype=float)
+    arr = arr[np.isfinite(arr) & (arr >= 0)]
+    if arr.size == 0:
+        return np.array([0.0, 1.0]), np.array([0.0, 1.0])
+    s = np.sort(arr)
+    cum = np.cumsum(s) / s.sum()
+    y = np.concatenate([[0.0], cum])
+    x_l = np.linspace(0.0, 1.0, len(y))
+    return x_l, y
 
 
 # ─── Chargement des données ────────────────────────────────────────────────
@@ -745,6 +777,255 @@ def _tab_clustering(d: dict) -> html.Div:
     ])
 
 
+def _tab_adequation(d: dict) -> html.Div:
+    """Onglet d'adéquation budgétaire / sémantique 2024–2025.
+
+    Synthèse compacte de plusieurs résultats du notebook :
+      - Portrait budgétaire global (AE / CP et par pilier)
+      - Adéquation SND30 des objectifs (nombre, AE, scores)
+      - Indicateurs de glissement sémantique et concentration budgétaire
+    """
+    budget24 = d.get("budget_2024", pd.DataFrame())
+    budget25 = d.get("budget_2025", pd.DataFrame())
+    piliers24 = d.get("piliers_2024", pd.DataFrame())
+    piliers25 = d.get("piliers_2025", pd.DataFrame())
+    comparison = d.get("comparison", pd.DataFrame())
+    obj24 = d.get("obj_24", pd.DataFrame())
+    obj25 = d.get("obj_25", pd.DataFrame())
+    sim_df = d.get("sim_df", pd.DataFrame())
+
+    # ── 1. Portrait budgétaire global ─────────────────────────────────────
+    ae24 = ae25 = cp24 = cp25 = np.nan
+    if not budget24.empty and {"ae", "cp"}.issubset(budget24.columns):
+        ae24 = float(budget24["ae"].sum()) / 1e9
+        cp24 = float(budget24["cp"].sum()) / 1e9
+    if not budget25.empty and {"ae", "cp"}.issubset(budget25.columns):
+        ae25 = float(budget25["ae"].sum()) / 1e9
+        cp25 = float(budget25["cp"].sum()) / 1e9
+
+    fig_macro = go.Figure()
+    if not np.isnan(ae24) and not np.isnan(ae25) and not np.isnan(cp24) and not np.isnan(cp25):
+        x_labels = ["AE", "CP"]
+        fig_macro = make_subplots(
+            rows=1,
+            cols=2,
+            subplot_titles=("AE vs CP totaux", "Δ AE par pilier"),
+            specs=[[{"type": "bar"}, {"type": "bar"}]],
+        )
+
+        fig_macro.add_trace(
+            go.Bar(
+                x=x_labels,
+                y=[ae24, cp24],
+                name="2024",
+                marker_color=YEAR_COLORS["2024"],
+            ),
+            row=1,
+            col=1,
+        )
+        fig_macro.add_trace(
+            go.Bar(
+                x=x_labels,
+                y=[ae25, cp25],
+                name="2025",
+                marker_color=YEAR_COLORS["2025"],
+            ),
+            row=1,
+            col=1,
+        )
+        fig_macro.update_yaxes(title_text="Mds FCFA", row=1, col=1)
+
+        # Variation AE par pilier si la table comparaison est disponible
+        if isinstance(comparison, pd.DataFrame) and not comparison.empty:
+            cmp = comparison.copy()
+            cmp = cmp.reset_index()
+            pilier_col = cmp.columns[0]
+
+            num_cols = [c for c in cmp.columns if cmp[c].dtype.kind in "fi"]
+            col_ae24 = "ae_2024" if "ae_2024" in cmp.columns else (num_cols[0] if num_cols else None)
+            col_ae25 = "ae_2025" if "ae_2025" in cmp.columns else (num_cols[1] if len(num_cols) > 1 else None)
+            if col_ae24 and col_ae25:
+                cmp["pilier_court"] = cmp[pilier_col].apply(_map_pilier)
+                cmp["delta"] = (cmp[col_ae25] - cmp[col_ae24]) / 1e9
+                cmp = cmp.sort_values("delta", ascending=True)
+                fig_macro.add_trace(
+                    go.Bar(
+                        x=cmp["delta"],
+                        y=cmp["pilier_court"],
+                        orientation="h",
+                        marker_color=[
+                            "#08f35e" if v >= 0 else "#ef4444" for v in cmp["delta"]
+                        ],
+                        name="Δ AE (2025-2024)",
+                        showlegend=False,
+                    ),
+                    row=1,
+                    col=2,
+                )
+                fig_macro.update_xaxes(title_text="Δ AE (Mds FCFA)", row=1, col=2)
+        fig_macro.update_layout(
+            template="plotly_white",
+            title="Portrait macrobudgétaire 2024 vs 2025",
+            barmode="group",
+            height=520,
+        )
+
+    # ── 2. Adéquation SND30 des objectifs ─────────────────────────────────
+    fig_obj_piliers = go.Figure()
+    fig_obj_scores = go.Figure()
+    if isinstance(obj24, pd.DataFrame) and isinstance(obj25, pd.DataFrame):
+        def _prepare_obj(df: pd.DataFrame, year_label: str) -> pd.DataFrame:
+            if df.empty:
+                return pd.DataFrame()
+            pilier_col = None
+            for c in ["pilier_court", "pilier_dominant"]:
+                if c in df.columns:
+                    pilier_col = c
+                    break
+            if pilier_col is None:
+                return pd.DataFrame()
+            out = df.copy()
+            out["Pilier"] = out[pilier_col].astype(str).apply(_map_pilier)
+            out["AE"] = _safe_numeric(out.get("ae", np.nan)) / 1e9
+            out["annee"] = year_label
+            return out[["Pilier", "AE", "annee", "score_pilier_dominant"]].copy()
+
+        o24 = _prepare_obj(obj24, "2024")
+        o25 = _prepare_obj(obj25, "2025")
+        all_o = pd.concat([o24, o25], ignore_index=True) if not o24.empty or not o25.empty else pd.DataFrame()
+
+        if not all_o.empty:
+            agg = (
+                all_o.groupby(["Pilier", "annee"], as_index=False)
+                .agg(n_obj=("AE", "size"), AE_total=("AE", "sum"))
+            )
+            fig_obj_piliers = make_subplots(
+                rows=1,
+                cols=2,
+                subplot_titles=("Nombre d'objectifs par pilier", "AE classifiées par pilier"),
+                specs=[[{"type": "bar"}, {"type": "bar"}]],
+            )
+            for year_label, color in YEAR_COLORS.items():
+                sub = agg[agg["annee"] == year_label]
+                fig_obj_piliers.add_trace(
+                    go.Bar(
+                        x=sub["Pilier"],
+                        y=sub["n_obj"],
+                        name=f"# objectifs {year_label}",
+                        marker_color=color,
+                    ),
+                    row=1,
+                    col=1,
+                )
+                fig_obj_piliers.add_trace(
+                    go.Bar(
+                        x=sub["Pilier"],
+                        y=sub["AE_total"],
+                        name=f"AE {year_label}",
+                        marker_color=color,
+                        showlegend=False,
+                    ),
+                    row=1,
+                    col=2,
+                )
+            fig_obj_piliers.update_yaxes(title_text="Nb objectifs", row=1, col=1)
+            fig_obj_piliers.update_yaxes(title_text="AE (Mds FCFA)", row=1, col=2)
+            fig_obj_piliers.update_layout(
+                template="plotly_white",
+                barmode="group",
+                height=520,
+            )
+
+        # Distribution des scores de pilier dominant
+        scores_parts = []
+        for df, year_label in [(obj24, "2024"), (obj25, "2025")]:
+            if "score_pilier_dominant" in df.columns:
+                tmp = df[["score_pilier_dominant"]].copy()
+                tmp["annee"] = year_label
+                scores_parts.append(tmp)
+        if scores_parts:
+            scores = pd.concat(scores_parts, ignore_index=True).dropna(subset=["score_pilier_dominant"])
+            fig_obj_scores = px.violin(
+                scores,
+                x="annee",
+                y="score_pilier_dominant",
+                color="annee",
+                color_discrete_map=YEAR_COLORS,
+                box=True,
+                points=False,
+                title="Distribution des scores de confiance (pilier dominant)",
+            )
+            fig_obj_scores.update_layout(template="plotly_white", height=420)
+
+    # ── 3. Glissement sémantique & concentration ──────────────────────────
+    fig_sim = go.Figure()
+    fig_lorenz = go.Figure()
+    if isinstance(sim_df, pd.DataFrame) and not sim_df.empty:
+        score_col = None
+        if "score_max_similarite" in sim_df.columns:
+            score_col = "score_max_similarite"
+        elif "similarity" in sim_df.columns:
+            score_col = "similarity"
+        if score_col:
+            sims = sim_df.dropna(subset=[score_col]).copy()
+            if "annee" not in sims.columns and "year" in sims.columns:
+                sims["annee"] = sims["year"]
+            if "annee" in sims.columns:
+                fig_sim = px.histogram(
+                    sims,
+                    x=score_col,
+                    color="annee",
+                    nbins=30,
+                    barmode="overlay",
+                    color_discrete_map=YEAR_COLORS,
+                    labels={score_col: "Similarité cosinus"},
+                    title="Distribution des similarités cosinus par année",
+                )
+                fig_sim.update_traces(opacity=0.65)
+                fig_sim.update_layout(template="plotly_white", height=420)
+
+    # Courbe de Lorenz AE (2024 vs 2025)
+    if not budget24.empty and not budget25.empty and "ae" in budget24.columns and "ae" in budget25.columns:
+        for year_label, df, color in [("2024", budget24, YEAR_COLORS["2024"]), ("2025", budget25, YEAR_COLORS["2025"])]:
+            x_l, y_l = _lorenz_curve(df["ae"].values)
+            g = _gini(df["ae"].values)
+            fig_lorenz.add_trace(
+                go.Scatter(x=x_l, y=y_l, mode="lines", name=f"{year_label} (Gini={g:.3f})", line=dict(color=color, width=2.5))
+            )
+        fig_lorenz.add_trace(
+            go.Scatter(x=[0, 1], y=[0, 1], mode="lines", name="Égalité parfaite", line=dict(color="gray", dash="dash"))
+        )
+        fig_lorenz.update_layout(
+            template="plotly_white",
+            title="Courbes de Lorenz — AE",
+            xaxis_title="Fraction cumulée des lignes",
+            yaxis_title="Fraction cumulée des AE",
+            height=420,
+        )
+
+    return html.Div([
+        _section_header(
+            "Adéquation budgétaire et sémantique",
+            "Synthèse 2024–2025 : budget AE/CP, alignement SND30 des objectifs et stabilité du langage budgétaire.",
+        ),
+        dbc.Row([
+            dbc.Col(dcc.Graph(figure=fig_macro), md=12),
+        ], className="mb-4"),
+        html.Hr(className="my-4"),
+        _section_header("Objectifs budgétaires et piliers SND30"),
+        dbc.Row([
+            dbc.Col(dcc.Graph(figure=fig_obj_piliers), md=8),
+            dbc.Col(dcc.Graph(figure=fig_obj_scores), md=4),
+        ], className="mb-4"),
+        html.Hr(className="my-4"),
+        _section_header("Glissement sémantique et concentration budgétaire"),
+        dbc.Row([
+            dbc.Col(dcc.Graph(figure=fig_sim), md=6),
+            dbc.Col(dcc.Graph(figure=fig_lorenz), md=6),
+        ]),
+    ])
+
+
 # ═════════════════════════════════════════════════════════════════════════════=
 # PAGE & CALLBACKS PUBLICS
 # ═════════════════════════════════════════════════════════════════════════════=
@@ -759,6 +1040,7 @@ def create_stats_page(DATA: dict) -> html.Div:
             dbc.Tab(label="🧪 Tests statistiques",    tab_id="stats-tests"),
             dbc.Tab(label="🌊 Évolution thématique",  tab_id="stats-thematic"),
             dbc.Tab(label="🔵 Clustering",            tab_id="stats-clustering"),
+            dbc.Tab(label="⚖️ Adéquation",            tab_id="stats-adequation"),
         ], id="stats-main-tabs", active_tab="stats-overview", class_name="page-tabs"
     )
     content = html.Div(id="stats-main-content", className="mt-4")
@@ -794,6 +1076,8 @@ def register_stats_callbacks(app, DATA: dict) -> None:
             return _tab_thematic(d_cache)
         if tab == "stats-clustering":
             return _tab_clustering(d_cache)
+        if tab == "stats-adequation":
+            return _tab_adequation(d_cache)
         # fallback
         return _tab_overview(d_cache)
 

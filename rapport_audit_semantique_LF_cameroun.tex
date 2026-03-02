@@ -1,0 +1,662 @@
+\documentclass[12pt, a4paper]{article}
+
+% ── Packages ──────────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[]{babel}
+\usepackage[top=2.2cm, bottom=2.2cm, left=2.5cm, right=2.5cm]{geometry}
+%\usepackage{lmodern}
+%\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{titling}
+\usepackage{abstract}
+\usepackage{fancyhdr}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{tcolorbox}
+\usepackage{mdframed}
+\usepackage{parskip}
+
+% ── Couleurs ──────────────────────────────────────────────────────────────────
+\definecolor{bleuCMR}{RGB}{0, 62, 128}
+\definecolor{vertCMR}{RGB}{0, 150, 57}
+\definecolor{rougeCMR}{RGB}{206, 17, 38}
+\definecolor{grisClair}{RGB}{245, 246, 248}
+\definecolor{grisTexte}{RGB}{80, 80, 80}
+\definecolor{jauneAlert}{RGB}{255, 243, 205}
+\definecolor{jauneBord}{RGB}{230, 180, 0}
+
+% ── Mise en page ──────────────────────────────────────────────────────────────
+\onehalfspacing
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+% ── Titres de sections ────────────────────────────────────────────────────────
+\titleformat{\section}{\large\bfseries\color{bleuCMR}}{\thesection.}{0.6em}{}[\color{bleuCMR}\titlerule]
+\titleformat{\subsection}{\normalsize\bfseries\color{bleuCMR!80}}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalsize\itshape\color{grisTexte}}{\thesubsubsection.}{0.5em}{}
+
+\titlespacing*{\section}{0pt}{14pt}{6pt}
+\titlespacing*{\subsection}{0pt}{10pt}{4pt}
+
+% ── En-tête et pied de page ───────────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{grisTexte}{Audit sémantique LF Cameroun 2024--2025}}
+\fancyhead[R]{\small\textcolor{grisTexte}{ISSEA -- ISE3 Data Science}}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ── Encadré résultat clé ──────────────────────────────────────────────────────
+\newmdenv[
+  backgroundcolor=grisClair,
+  linecolor=bleuCMR,
+  linewidth=1.5pt,
+  leftline=true, rightline=false, topline=false, bottomline=false,
+  innerleftmargin=10pt, innerrightmargin=8pt,
+  innertopmargin=6pt, innerbottommargin=6pt,
+  skipabove=8pt, skipbelow=6pt
+]{keybox}
+
+\newmdenv[
+  backgroundcolor=jauneAlert,
+  linecolor=jauneBord,
+  linewidth=1.5pt,
+  leftline=true, rightline=false, topline=false, bottomline=false,
+  innerleftmargin=10pt, innerrightmargin=8pt,
+  innertopmargin=6pt, innerbottommargin=6pt,
+  skipabove=6pt, skipbelow=4pt
+]{alertbox}
+
+% ── Commandes utiles ──────────────────────────────────────────────────────────
+\newcommand{\mds}[1]{\textbf{#1~Mds FCFA}}
+\newcommand{\pct}[1]{\textbf{#1\,\%}}
+\newcommand{\sig}[1]{\textcolor{rougeCMR}{\textbf{#1}}}
+\newcommand{\figref}[1]{\textcolor{bleuCMR}{\textit{[#1]}}}
+
+% ── Méta-informations ────────────────────────────────────────────────────────
+\hypersetup{
+  colorlinks=true,
+  linkcolor=bleuCMR,
+  urlcolor=bleuCMR,
+  pdftitle={Audit sémantique des Lois de Finances du Cameroun 2024-2025},
+  pdfauthor={ISSEA -- ISE3 Data Science}
+}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{document}
+% ══════════════════════════════════════════════════════════════════════════════
+
+% ── Page de titre ─────────────────────────────────────────────────────────────
+\begin{titlepage}
+\centering
+\vspace*{1cm}
+
+{\color{bleuCMR}\rule{\linewidth}{2pt}}
+\vspace{0.4cm}
+
+{\LARGE\bfseries\color{bleuCMR}
+Audit Sémantique des Lois de Finances\\[0.3em]
+du Cameroun\\[0.4em]
+{\large\color{grisTexte} Exercices 2024 -- 2025}
+}
+
+\vspace{0.4cm}
+{\color{bleuCMR}\rule{\linewidth}{2pt}}
+
+\vspace{1.2cm}
+
+{\large\textit{Analyse comparative par traitement automatique du langage,\\
+modélisation thématique et classification zero-shot SND30}}
+
+\vspace{1.5cm}
+
+\begin{tabular}{ll}
+\textbf{Institution} & Institut Sous-Régional de Statistique et\\
+                     & d'Économie Appliquée (ISSEA), Yaoundé \\[4pt]
+\textbf{Programme}   & ISE3 -- Spécialisation Data Science \\[4pt]
+\textbf{Données}     & Extraction automatique via API Gemini \\[4pt]
+                     & (Lois de Finances officielles du Cameroun) \\[4pt]
+\textbf{Outils}      & Python 3.11, sentence-transformers,\\
+                     & LDA, mDeBERTa-v3 (zero-shot), K-Means,\\
+                     & HDBSCAN, scipy.stats \\[4pt]
+\textbf{Date}        & Mars 2026 \\
+\end{tabular}
+
+\vfill
+
+\begin{tcolorbox}[colback=grisClair, colframe=bleuCMR, width=0.9\linewidth,
+  title={\textbf{Résumé exécutif}}, fonttitle=\small\bfseries]
+\small
+Ce rapport présente les résultats d'un audit sémantique comparatif des Lois de Finances (LF) du
+Cameroun pour les exercices 2024 et 2025, portant sur \textbf{183 lignes budgétaires}, \textbf{256 articles} et 
+\textbf{365 objectifs programmatiques}. L'analyse mobilise l'extraction automatique de texte via l'API Gemini, 
+les embeddings multilingues (similarité cosinus), la modélisation LDA et la classification zero-shot alignée 
+sur les 4 piliers de la Stratégie Nationale de Développement (SND30). 
+Les résultats montrent un glissement sémantique faible mais statistiquement avéré 
+(\mbox{Cohen's $d = -0{,}835$}, \mbox{$p < 0{,}001$}), 
+une architecture programmatique stable (\pct{94{,}8} des programmes maintiennent leur pilier SND30), 
+et un rééquilibrage budgétaire marqué en faveur du pilier Transformation structurelle (+\pct{143{,}5}).
+\end{tcolorbox}
+
+\end{titlepage}
+
+\tableofcontents
+\thispagestyle{fancy}
+\newpage
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Introduction}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\subsection{Contexte}
+
+La Loi de Finances (LF) est l'instrument juridique central de la politique budgétaire du Cameroun. 
+Elle définit chaque année les ressources et les charges de l'État, en opérationnalisant les 
+orientations de la Stratégie Nationale de Développement 2020--2030 (SND30) à travers quatre piliers 
+stratégiques\,: la Transformation structurelle de l'économie, le Développement du capital humain, 
+la Promotion de l'emploi et de l'insertion socio-économique, et la Gouvernance.
+
+Dans un contexte de transition vers une budgétisation axée sur les résultats, évaluer la \textbf{continuité 
+sémantique} entre les lois de finances successives constitue un enjeu analytique majeur. Un glissement 
+lexical non maîtrisé peut signaler une rupture dans la cohérence programmatique, diluer l'efficacité 
+des politiques publiques, ou révéler des réorientations stratégiques non explicitées.
+
+\subsection{Problématiques}
+
+Cette étude s'articule autour de trois questions de recherche\,:
+
+\begin{enumerate}[label=\textbf{Q\arabic*.}, leftmargin=2cm]
+  \item \textbf{Glissement sémantique\,:} Dans quelle mesure le contenu textuel de la LF 2025 
+  diffère-t-il de celui de la LF 2024, et ce glissement est-il statistiquement significatif~?
+  
+  \item \textbf{Cohérence thématique\,:} La distribution thématique des articles et des objectifs 
+  budgétaires a-t-elle évolué de manière significative entre les deux exercices~?
+  
+  \item \textbf{Alignement SND30\,:} L'architecture programmatique des objectifs budgétaires reste-t-elle 
+  alignée sur les quatre piliers de la SND30~? Observe-t-on des reclassifications inter-piliers~?
+\end{enumerate}
+
+\subsection{Objectifs}
+
+L'objectif général est de conduire un audit sémantique rigoureux et reproductible des LF 2024 et 2025 
+du Cameroun, en mobilisant des méthodes de traitement automatique du langage (TAL) et d'analyse statistique.
+
+Les objectifs spécifiques sont\,:
+\begin{itemize}[noitemsep]
+  \item Mesurer le glissement sémantique inter-annuel via la similarité cosinus d'embeddings multilingues~;
+  \item Identifier l'évolution de la distribution thématique par modélisation LDA~;
+  \item Évaluer l'alignement des objectifs budgétaires sur les piliers SND30 par classification zero-shot~;
+  \item Quantifier la concentration budgétaire via les indices de Gini et HHI~;
+  \item Tester statistiquement la significativité de chaque changement identifié.
+\end{itemize}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Méthodologie}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\subsection{Collecte et préparation des données}
+
+Les textes des Lois de Finances 2024 et 2025 ont été extraits de manière automatique via l'\textbf{API 
+Gemini} de Google (modèle \texttt{gemini-pro}), permettant le parsing structuré des documents PDF 
+officiels publiés par le Ministère des Finances du Cameroun. Cette approche a permis d'obtenir un 
+corpus segmenté en articles juridiques, chapitres et programmes budgétaires, avec les montants 
+associés (Autorisations d'Engagement -- AE, et Crédits de Paiement -- CP).
+
+\begin{keybox}
+\small\textbf{Corpus final\,:} LF 2024\,: 168 articles, 183 lignes budgétaires, 183 objectifs~; 
+LF 2025\,: 88 articles, 182 lignes budgétaires, 182 objectifs. Au total\,: 256 articles et 365 objectifs analysés.
+\end{keybox}
+
+\subsection{Pipeline analytique}
+
+Le pipeline d'analyse comprend cinq étapes complémentaires, décrites ci-après et synthétisées 
+dans la Figure~1.
+
+\subsubsection{Embeddings et similarité cosinus}
+
+Chaque article a été encodé via le modèle \texttt{paraphrase-multilingual-mpnet-base-v2} 
+(sentence-transformers, 768 dimensions). Pour chaque article de la LF 2025, le \textbf{score 
+de similarité cosinus maximal} avec l'ensemble des articles de la LF 2024 a été calculé\,:
+\[
+  s_i = \max_{j \in \text{LF}_{2024}} \frac{\mathbf{e}_{2025,i} \cdot \mathbf{e}_{2024,j}}
+  {\|\mathbf{e}_{2025,i}\| \cdot \|\mathbf{e}_{2024,j}\|}
+\]
+Un seuil $\theta = 0{,}70$ a été fixé pour identifier les articles à changement sémantique significatif.
+
+\subsubsection{Modélisation thématique LDA}
+
+Un modèle LDA (\textit{Latent Dirichlet Allocation}) à 4 topics a été entraîné séparément sur 
+les corpus 2024 et 2025, après nettoyage et lemmatisation. Les topics ont été interprétés comme\,: 
+T0 -- Fiscalité \& revenus~; T1 -- Sanctions \& sécurité sociale~; T2 -- Administration fiscale~; 
+T3 -- Finances publiques \& secteurs.
+
+\subsubsection{Classification zero-shot SND30}
+
+Chaque objectif budgétaire a été classifié selon les 4 piliers SND30 via le modèle 
+\texttt{mDeBERTa-v3-base-mnli-xnli} (classification zero-shot multilingue). Un score de confiance 
+$[0,1]$ est attribué à chaque pilier, et le pilier dominant est retenu.
+
+\subsubsection{Clustering}
+
+Deux algorithmes complémentaires ont été appliqués sur les représentations vectorielles des 
+articles\,: \textbf{K-Means} ($k=3$, méthode du coude) et \textbf{HDBSCAN} (densité, 
+$\texttt{min\_cluster\_size}=5$), permettant d'évaluer la structure latente du corpus.
+
+\subsubsection{Tests statistiques}
+
+Les différences inter-annuelles ont été testées par\,: le test de Kolmogorov-Smirnov (distributions), 
+le test de Mann-Whitney U (comparaisons non-paramétriques), le test du Chi$^2$ (distributions catégorielles), 
+le test de Kruskal-Wallis (comparaisons multi-groupes), et le $d$ de Cohen (taille d'effet).
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Résultats}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\subsection{Portrait macrobudgétaire 2024--2025}
+
+\begin{table}[H]
+\centering
+\caption{Principaux indicateurs macrobudgétaires -- LF 2024 vs LF 2025}
+\label{tab:macro}
+\small
+\begin{tabularx}{\linewidth}{lXXc}
+\toprule
+\rowcolor{bleuCMR!15}
+\textbf{Indicateur} & \textbf{LF 2024} & \textbf{LF 2025} & \textbf{Variation} \\
+\midrule
+AE totales & 6,76 Mds FCFA & 7,38 Mds FCFA & \sig{+9,1\,\%} \\
+CP totaux  & 6,68 Mds FCFA & 7,25 Mds FCFA & \sig{+8,6\,\%} \\
+Ratio AE/CP & 1,013 & 1,018 & $\approx$ stable \\
+Écart AE$-$CP & 85 M FCFA & 130 M FCFA & -- \\
+Nb lignes budgétaires & 183 & 182 & $-1$ \\
+Nb articles & 168 & 88 & $-47{,}6\,\%$ \\
+Indice de Gini AE & 0,810 & 0,794 & $-0{,}016$ \\
+HHI inter-piliers & 4\,427 & 4\,513 & $+85$ pts \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Le budget 2025 affiche une croissance maîtrisée de \pct{9,1} en AE. La stabilité du ratio AE/CP 
+à 1,01 traduit une gestion saine des engagements, sans accumulation de restes-à-payer. 
+Le nombre de lignes budgétaires est quasi-identique (183$\to$182), confirmant la continuité 
+de la nomenclature programmatique.
+
+\figref{Insérer ici la Figure~1 -- Portrait macrobudgétaire\,: barres AE/CP, waterfall piliers, donut SND30}
+
+\subsection{Évolution budgétaire par pilier SND30}
+
+\begin{table}[H]
+\centering
+\caption{Évolution des AE par pilier SND30 (2024--2025)}
+\label{tab:piliers}
+\small
+\begin{tabularx}{\linewidth}{lXXXXc}
+\toprule
+\rowcolor{bleuCMR!15}
+\textbf{Pilier SND30} & \textbf{AE 2024} & \textbf{\% 2024} & \textbf{AE 2025} & \textbf{\% 2025} & \textbf{Évol.} \\
+\midrule
+Emploi et insertion & 4,06 Mds & 60,0\,\% & 4,57 Mds & 61,9\,\% & \sig{+12,6\,\%} \\
+Gouvernance & 1,75 Mds & 25,9\,\% & 1,73 Mds & 23,4\,\% & $-1{,}3\,\%$ \\
+Capital humain & 0,82 Mds & 12,2\,\% & 0,77 Mds & 10,4\,\% & \sig{$-6{,}5\,\%$} \\
+Transform. structurelle & 0,13 Mds & 1,9\,\% & 0,31 Mds & 4,2\,\% & \sig{+143,5\,\%} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Deux signaux stratégiques se dégagent de cette comparaison\,: 
+
+\textbf{(i) La Transformation structurelle triple sa dotation (+143,5\,\%)} passant de 127\,M à 309\,M FCFA. 
+Bien que sa part absolue reste modeste (4,2\,\% des AE), cette progression marque une inflexion 
+délibérée vers l'investissement productif, cohérente avec les ambitions industrielles de la SND30.
+
+\textbf{(ii) Le Capital humain recule simultanément en nombre d'objectifs ($-11{,}4\,\%$, 35$\to$31) 
+et en AE ($-6{,}5\,\%$, $-53$\,M FCFA)}, ramenant sa part de 12,2\,\% à 10,4\,\%. Ce double recul, 
+portant sur l'éducation et la santé, mérite une surveillance particulière au regard des cibles SND30.
+
+\begin{alertbox}
+\small $\Rightarrow$~Le HHI inter-piliers augmente de 4\,427 à 4\,513 (niveau «~très concentré~»$>$2\,500), 
+confirmant la polarisation croissante du budget vers le pilier Emploi et insertion ($\approx$\,62\,\% des AE).
+\end{alertbox}
+
+\subsection{Analyse du glissement sémantique}
+
+\begin{table}[H]
+\centering
+\caption{Statistiques descriptives de la similarité cosinus par exercice}
+\label{tab:sim}
+\small
+\begin{tabularx}{\linewidth}{lXXXXXXXc}
+\toprule
+\rowcolor{bleuCMR!15}
+\textbf{Année} & \textbf{n} & \textbf{Moy.} & \textbf{Méd.} & \textbf{Éc-t.} & \textbf{Q1} & \textbf{Q3} & \textbf{Min} & \textbf{\%$<\theta$} \\
+\midrule
+2024 & 168 & 0,856 & 0,849 & 0,083 & 0,795 & 0,932 & 0,567 & 3,0\,\% \\
+2025 & 88  & 0,916 & 0,931 & 0,060 & 0,879 & 0,961 & 0,699 & 1,1\,\% \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Les scores de similarité cosinus sont élevés dans les deux exercices (0,856 et 0,916), confirmant 
+une forte continuité textuelle. Seuls \textbf{5 articles sur 168 (3,0\,\%)} en 2024 et 
+\textbf{1 article sur 88 (1,1\,\%)} en 2025 franchissent le seuil de rupture sémantique $\theta = 0{,}70$.
+
+Trois tests statistiques convergent pour établir que les deux distributions sont structurellement distinctes\,:
+
+\begin{table}[H]
+\centering
+\caption{Tests statistiques sur les distributions de similarité cosinus}
+\label{tab:tests_sim}
+\small
+\begin{tabularx}{\linewidth}{lXXc}
+\toprule
+\rowcolor{bleuCMR!15}
+\textbf{Test} & \textbf{Statistique} & \textbf{$p$-valeur} & \textbf{Conclusion} \\
+\midrule
+Kolmogorov-Smirnov & $D = 0{,}419$ & $<0{,}001$ & \sig{$\bigstar\bigstar\bigstar$} Sig. \\
+Mann-Whitney U & $U = 4\,212$ & $<0{,}001$ & \sig{$\bigstar\bigstar\bigstar$} Sig. \\
+Cohen's $d$ & $d = -0{,}835$ & -- & \sig{Effet fort} \\
+Shapiro-Wilk 2024 & $W =\,--$ & $0{,}0008$ & Non-normal \\
+Shapiro-Wilk 2025 & $W =\,--$ & $0{,}0002$ & Non-normal \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Le rejet de la normalité dans les deux distributions (Shapiro-Wilk, $p<0{,}001$) justifie 
+\textit{a posteriori} l'emploi de tests non-paramétriques. Le \textbf{Cohen's $d = -0{,}835$} 
+constitue le résultat le plus informatif\,: la taille d'effet forte signifie que la loi 2025 
+est \textit{structurellement plus proche} de la loi 2024 que l'inverse — le glissement est réel 
+mais orienté vers plus de continuité, non vers la rupture.
+
+\figref{Insérer ici la Figure~2\,: KDE + ECDF comparées, violin plots, profil de glissement par article}
+
+\subsection{Analyse thématique par modélisation LDA}
+
+La distribution des topics dominants révèle une restructuration thématique significative 
+($\chi^2(3) = 8{,}14$, $p = 0{,}043$)\,:
+
+\begin{table}[H]
+\centering
+\caption{Prévalence des topics dominants par exercice (LDA, 4 topics)}
+\label{tab:topics}
+\small
+\begin{tabularx}{\linewidth}{lXXcc}
+\toprule
+\rowcolor{bleuCMR!15}
+\textbf{Topic} & \textbf{2024 (n=168)} & \textbf{2025 (n=88)} & \textbf{$\Delta$ pts} & \textbf{Tendance} \\
+\midrule
+T0 – Fiscalité \& revenus      & 32 arts (19,0\,\%) &  8 arts (9,1\,\%) & $-9{,}9$ & $\downarrow$ \\
+T1 – Sanctions \& séc. sociale & 33 arts (19,6\,\%) & 27 arts (30,7\,\%) & $+11{,}1$ & $\uparrow$ \\
+T2 – Administration fiscale    & 61 arts (36,3\,\%) & 26 arts (29,5\,\%) & $-6{,}8$ & $\downarrow$ \\
+T3 – Finances publ. \& sect.   & 42 arts (25,0\,\%) & 27 arts (30,7\,\%) & $+5{,}7$ & $\uparrow$ \\
+\midrule
+\multicolumn{4}{l}{\textit{Test Chi}$^2$(3) = 8,14 \quad $p$ = 0,043 \,\sig{$\bigstar$}} & \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Le recul de \textbf{T0 (Fiscalité \& revenus)}, divisé par deux en proportion (19,0\,$\to$\,9,1\,\%), est 
+le principal vecteur du changement. Il traduit une réduction des dispositions purement fiscales 
+au profit de mécanismes réglementaires (T1, +11,1 pts) et d'une gestion sectorielle plus fine (T3, +5,7 pts).
+
+L'analyse lexicale confirme ce glissement\,: en 2024, T0 est dominé par \textit{revenus, dépenses, 
+exploitation} ; en 2025, il bascule vers \textit{taux, ministère, réalisation, mise en oe{}uvre, programmes} 
+— transition du registre de la \textit{planification des recettes} vers celui de \textit{l'exécution 
+programmatique}.
+
+\figref{Insérer ici la Figure~3\,: prévalence comparée, top mots par topic, glissement lexical (delta probabilités)}
+
+\subsection{Classification zero-shot et alignement SND30}
+
+\subsubsection{Répartition des objectifs par pilier}
+
+\begin{table}[H]
+\centering
+\caption{Objectifs budgétaires classifiés par pilier SND30}
+\label{tab:snd30}
+\small
+\begin{tabularx}{\linewidth}{lXXXXXX}
+\toprule
+\rowcolor{bleuCMR!15}
+\textbf{Pilier SND30} & \textbf{Obj. 2024} & \textbf{\% 2024} & \textbf{AE 2024} & \textbf{Obj. 2025} & \textbf{\% 2025} & \textbf{AE 2025} \\
+\midrule
+Emploi et insertion & 78 & 42,6\,\% & 4,06 Mds & 79 & 43,4\,\% & 4,57 Mds \\
+Gouvernance & 65 & 35,5\,\% & 1,75 Mds & 66 & 36,3\,\% & 1,73 Mds \\
+Capital humain & 35 & 19,1\,\% & 0,82 Mds & 31 & 17,0\,\% & 0,77 Mds \\
+Transform. structurelle & 5 & 2,7\,\% & 0,13 Mds & 6 & 3,3\,\% & 0,31 Mds \\
+\midrule
+\multicolumn{2}{l}{\textit{Chi}$^2$(3)=0,34} & \multicolumn{4}{l}{$p$=0,951 — Distribution non significativement différente} & \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Le Chi$^2$ quasi-nul ($p=0{,}951$) confirme que la \textbf{répartition catégorielle des objectifs 
+par pilier est statistiquement identique entre 2024 et 2025}. Les tests de Mann-Whitney U sur les 
+scores de classification confirment cette stabilité\,: tous les $p > 0{,}60$ et tous les 
+Cohen's $d < 0{,}08$ (effet négligeable).
+
+\subsubsection{Matrice de transition des piliers}
+
+Sur \textbf{191 programmes communs} aux deux exercices, \textbf{181 (94,8\,\%)} maintiennent le même 
+pilier SND30. Seulement 10 programmes (5,2\,\%) sont reclassifiés. Les flux principaux sont\,:
+
+\begin{itemize}[noitemsep]
+  \item \textbf{Emploi $\to$ Gouvernance (4 cas)\,:} \textit{Direction et coordination de l'action 
+  gouvernementale}, \textit{Amélioration de la couverture sanitaire} -- révèlent la porosité sémantique 
+  entre ces deux piliers sur les programmes transversaux.
+  \item \textbf{Gouvernance $\to$ Emploi (3 cas)\,:} \textit{Gouvernance et appui institutionnel}, 
+  \textit{Négociation et suivi de la coopération}.
+  \item \textbf{Capital humain $\to$ Transformation structurelle (1 cas)\,:} \textit{Renforcement du 
+  système de santé} -- interprétation cohérente avec une vision de la santé comme investissement économique.
+\end{itemize}
+
+\figref{Insérer ici la Figure~4\,: heatmap matrice de transition, scores de classification par pilier, heatmap scores moyens}
+
+\subsection{Analyse du clustering}
+
+\begin{table}[H]
+\centering
+\caption{Résultats du clustering K-Means et HDBSCAN}
+\label{tab:clusters}
+\small
+\begin{tabularx}{\linewidth}{lXXXX}
+\toprule
+\rowcolor{bleuCMR!15}
+\textbf{Algorithme} & \textbf{Exercice} & \textbf{Clusters} & \textbf{Distribution} & \textbf{Bruit} \\
+\midrule
+K-Means ($k=3$) & 2024 & 3 & C0:24 (14\,\%), C1:70 (42\,\%), C2:74 (44\,\%) & -- \\
+K-Means ($k=3$) & 2025 & 3 & C0:28 (32\,\%), C1:20 (23\,\%), C2:40 (46\,\%) & -- \\
+\midrule
+HDBSCAN & 2024 & 4 & C0:7, C1:14, C2:40, C3:11 & 96 (57,1\,\%) \\
+HDBSCAN & 2025 & 4 & C0:26, C1:9, C2:11, C3:5 & 37 (42,0\,\%) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Le taux de bruit HDBSCAN très élevé en 2024 (\textbf{57,1\,\%}) est le résultat le plus informatif\,: 
+plus de la moitié des articles n'intègrent pas de clusters denses, confirmant l'\textbf{hétérogénéité 
+intrinsèque du corpus juridique} -- un résultat attendu pour un texte couvrant de nombreux domaines. 
+La réduction du bruit à 42,0\,\% en 2025 s'explique par la rationalisation du corpus ($-47{,}6\,\%$ d'articles).
+
+La composition thématique des clusters évolue notablement\,: en 2024, les trois clusters sont 
+thématiquement homogènes (tous dominés par T2 à $\approx$\,50$-$60\,\%). En 2025, une spécialisation 
+émerge\,: \textbf{le Cluster 1 concentre 60,0\,\% d'articles T1} (Sanctions \& sécurité sociale), 
+formant le groupe thématiquement le plus pur de l'ensemble du corpus. Le test de Kruskal-Wallis 
+($H=5{,}20$, $p=0{,}074$) ne distingue pas les clusters par leur score de similarité cosinus.
+
+\figref{Insérer ici la Figure~5\,: taille des clusters, taux de bruit HDBSCAN, composition thématique empilée}
+
+\subsection{Concentration budgétaire}
+
+Le Gini AE de \textbf{0,810 en 2024} et \textbf{0,794 en 2025} ($\Delta$ = $-0{,}016$) confirme une 
+distribution extrêmement inégalitaire des dotations entre programmes\,: environ 20\,\% des programmes 
+captent $\approx$\,80\,\% des ressources. La légère baisse ($-1{,}6$ point) indique une redistribution 
+marginalement plus équitable, insuffisante pour modifier la structure de concentration.
+
+Le diagramme de Pareto des AE 2025 révèle qu'un faible nombre de lignes budgétaires concentre 
+l'essentiel des crédits, illustrant la loi de puissance caractéristique des budgets publics.
+
+\begin{keybox}
+\small Paradoxe Gini/HHI\,: le Gini intra-programme baisse légèrement ($-1{,}6$ pt) pendant que le HHI 
+inter-piliers augmente (+85 pts). Ces deux mouvements simultanés reflètent une \textbf{consolidation 
+stratégique}\,: les crédits sont marginalement mieux distribués au sein des programmes, mais la 
+polarisation entre les 4 grands piliers s'accentue au profit de l'Emploi.
+\end{keybox}
+
+\figref{Insérer ici la Figure~6\,: courbes de Lorenz 2024 vs 2025, diagramme de Pareto AE 2025}
+
+\subsection{Synthèse statistique}
+
+\begin{table}[H]
+\centering
+\caption{Bilan de l'ensemble des tests statistiques réalisés}
+\label{tab:bilan}
+\small
+\begin{tabularx}{\linewidth}{lXXc}
+\toprule
+\rowcolor{bleuCMR!15}
+\textbf{Test} & \textbf{Objet} & \textbf{Statistique / $p$-val.} & \textbf{Décision} \\
+\midrule
+KS-test & Similarité cosinus 2024 vs 2025 & $D=0{,}419$ \,/\, $p<0{,}001$ & \sig{$\bigstar\bigstar\bigstar$ Sig.} \\
+Mann-Whitney U & Similarité cosinus & $U=4\,212$ \,/\, $p<0{,}001$ & \sig{$\bigstar\bigstar\bigstar$ Sig.} \\
+Chi$^2$ (topics) & Distrib. topics dominants & $\chi^2=8{,}14$ \,/\, $p=0{,}043$ & \sig{$\bigstar$ Sig.} \\
+Chi$^2$ (piliers) & Distrib. piliers SND30 & $\chi^2=0{,}34$ \,/\, $p=0{,}951$ & n.s. \\
+Mann-Whitney (piliers ×4) & Scores classif. SND30 & $d<0{,}08$ \,/\, $p>0{,}60$ & n.s. \\
+Kruskal-Wallis & Similarité vs clusters & $H=5{,}20$ \,/\, $p=0{,}074$ & n.s. \\
+\midrule
+\multicolumn{3}{l}{\textbf{Bilan}\,: 3 tests significatifs sur 9 ($\alpha=5\,\%$)} & \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Les tests significatifs portent sur le \textbf{glissement sémantique} (2 tests, effet fort) et la 
+\textbf{distribution thématique LDA} (1 test, effet modéré). La stabilité programmatique SND30 est 
+confirmée par 6 tests non-significatifs.
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section{Recommandations}
+% ══════════════════════════════════════════════════════════════════════════════
+
+Sur la base des résultats présentés, six recommandations sont formulées à destination des décideurs 
+et des équipes d'analyse budgétaire.
+
+\begin{enumerate}[label=\textbf{R\arabic*.}, leftmargin=2cm, itemsep=6pt]
+
+  \item \textbf{Renforcer le suivi du pilier Capital humain.}
+  Le recul simultané du nombre d'objectifs ($35 \to 31$, $-11{,}4\,\%$) et des AE ($0{,}82 \to 0{,}77$ 
+  Mds FCFA, $-6{,}5\,\%$) du pilier Capital humain doit faire l'objet d'un monitoring renforcé, en 
+  particulier pour les sous-programmes Éducation et Santé, dont les effets de long terme sur la 
+  croissance conditionnent l'atteinte des cibles SND30 à l'horizon 2030.
+
+  \item \textbf{Valider manuellement les 10 reclassifications inter-piliers.}
+  Les reclassifications de programmes d'un pilier SND30 à l'autre (notamment \textit{Couverture 
+  sanitaire} d'Emploi vers Gouvernance, et \textit{Renforcement du système de santé} de Capital humain 
+  vers Transformation structurelle) révèlent les limites du modèle zero-shot sur les intitulés 
+  transversaux. Une revue manuelle de ces 10 cas est nécessaire pour garantir la robustesse de l'audit.
+
+  \item \textbf{Appliquer la correction de Bonferroni pour les tests multiples.}
+  Les 4 tests de Mann-Whitney U réalisés sur les scores de classification par pilier nécessitent 
+  une correction du seuil ($\alpha_{\text{corr}} = 0{,}05/4 = 0{,}0125$) pour contrôler le risque 
+  d'inflation du taux d'erreur de première espèce.
+
+  \item \textbf{Optimiser le clustering HDBSCAN.}
+  Le taux de bruit élevé (57,1\,\% en 2024) limite l'interprétabilité des clusters. L'exploration 
+  de \texttt{min\_cluster\_size=3} combinée à une réduction dimensionnelle UMAP préalable devrait 
+  permettre d'abaisser ce taux sous 30\,\% et de produire des groupes thématiques plus stables et 
+  interprétables.
+
+  \item \textbf{Croiser les AE avec les taux d'exécution réels.}
+  L'audit porte sur les crédits \textit{programmés}. Son enrichissement avec les CP exécutés réels 
+  permettrait de distinguer les ambitions budgétaires de la réalité de consommation des crédits, 
+  dimension essentielle pour évaluer l'efficacité opérationnelle des politiques publiques.
+
+  \item \textbf{Étendre l'analyse à la LF 2023 comme référence temporelle.}
+  L'intégration d'un troisième exercice (LF 2023) permettrait de distinguer les tendances 
+  structurelles pluriannuelles des variations conjoncturelles 2024--2025, et d'évaluer si le 
+  rééquilibrage observé (hausse de la Transformation structurelle, recul du Capital humain) s'inscrit 
+  dans une trajectoire continue ou constitue une rupture isolée.
+
+\end{enumerate}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\section*{Conclusion}
+\addcontentsline{toc}{section}{Conclusion}
+% ══════════════════════════════════════════════════════════════════════════════
+
+Cet audit sémantique comparatif des Lois de Finances 2024 et 2025 du Cameroun apporte un éclairage 
+quantitatif inédit sur la continuité et les évolutions de la programmation budgétaire nationale.
+
+Les résultats établissent que la LF 2025 constitue une \textbf{évolution continue} de la LF 2024 
+— non une rupture. La grande majorité des articles (97\,\%) présente une similarité cosinus supérieure 
+au seuil critique $\theta=0{,}70$, et 94,8\,\% des programmes maintiennent leur alignement sur le 
+même pilier SND30. Cette stabilité programmatique est confirmée par six tests statistiques non-significatifs.
+
+Simultanément, deux mutations qualitatives méritent attention\,: (i) un \textbf{rééquilibrage 
+budgétaire stratégique} vers la Transformation structurelle (+143,5\,\%) au détriment du Capital humain 
+($-6{,}5\,\%$), et (ii) un \textbf{glissement thématique} des articles vers les dispositions réglementaires 
+et la gestion sectorielle, statistiquement significatif ($\chi^2=8{,}14$, $p=0{,}043$).
+
+La méthodologie mobilisée -- extraction automatique via API Gemini, embeddings multilingues, 
+LDA, classification zero-shot et tests non-paramétriques -- constitue un cadre analytique reproductible 
+et extensible aux exercices budgétaires futurs. Son intégration dans un tableau de bord dynamique 
+de suivi de l'alignement SND30 représenterait un outil précieux pour le pilotage de la politique 
+budgétaire camerounaise.
+
+% ══════════════════════════════════════════════════════════════════════════════
+\newpage
+\appendix
+\section*{Annexe -- Guide d'insertion des figures}
+\addcontentsline{toc}{section}{Annexe -- Guide d'insertion des figures}
+% ══════════════════════════════════════════════════════════════════════════════
+
+\small
+\begin{table}[H]
+\centering
+\caption*{Localisation et description des figures générées par le notebook}
+\begin{tabularx}{\linewidth}{lXl}
+\toprule
+\rowcolor{bleuCMR!15}
+\textbf{Figure} & \textbf{Description} & \textbf{Fichier} \\
+\midrule
+Fig.~1 & Portrait macrobudgétaire\,: barres AE/CP, waterfall piliers, donut SND30 & \texttt{fig1\_portrait\_budgetaire.png} \\
+Fig.~2 & Glissement sémantique\,: KDE, ECDF, violin, profil similarité & \texttt{fig2\_glissement\_semantique.png} \\
+Fig.~3 & Topic Modeling LDA\,: prévalence, top mots, glissement lexical & \texttt{fig3\_topic\_modeling.png} \\
+Fig.~4 & Classification SND30\,: heatmap transition, scores, barres piliers & \texttt{fig4\_classification\_snd30.png} \\
+Fig.~5 & Clustering\,: tailles K-Means, bruit HDBSCAN, composition thématique & \texttt{fig5\_clustering.png} \\
+Fig.~6 & Concentration budgétaire\,: Lorenz, Pareto, courbe concentration & \texttt{fig6\_concentration.png} \\
+Fig.~7 & Tableau de bord\,: volcano plot tests, Cohen's $d$, variations relatives & \texttt{fig7\_tableau\_bord\_stats.png} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\vspace{0.5cm}
+
+\noindent\textbf{Instructions d'insertion dans ce document LaTeX\,:}
+
+\begin{verbatim}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{fig1_portrait_budgetaire.png}
+  \caption{Portrait macrobudgétaire -- LF 2024 vs LF 2025}
+  \label{fig:portrait}
+\end{figure}
+\end{verbatim}
+
+\noindent Les fichiers \texttt{.png} sont générés lors de l'exécution du notebook 
+\texttt{audit\_semantique\_cameroun\_2024\_2025.ipynb} et sauvegardés dans le répertoire 
+\texttt{outputs/}.
+
+\end{document}
