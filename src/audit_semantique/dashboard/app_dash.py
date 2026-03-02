@@ -831,7 +831,7 @@ def create_budget_page():
                 dbc.Card([
                     dbc.CardBody([
                         html.H6("AE 2024", className="text-muted"),
-                        html.H4(f"{total_ae_2024/1e9:.2f} Mds FCFA"),
+                        html.H4(f"{total_ae_2024:.2f} Mds FCFA"),
                         html.Small(f"+{(total_ae_2025/total_ae_2024-1)*100:.1f}% vs 2025", className="text-success"),
                     ])
                 ], className="kpi-card shadow-sm")
@@ -840,7 +840,7 @@ def create_budget_page():
                 dbc.Card([
                     dbc.CardBody([
                         html.H6("CP 2024", className="text-muted"),
-                        html.H4(f"{total_cp_2024/1e9:.2f} Mds FCFA"),
+                        html.H4(f"{total_cp_2024:.2f} Mds FCFA"),
                         html.Small(f"+{(total_cp_2025/total_cp_2024-1)*100:.1f}% vs 2025", className="text-success"),
                     ])
                 ], className="kpi-card shadow-sm")
@@ -849,8 +849,8 @@ def create_budget_page():
                 dbc.Card([
                     dbc.CardBody([
                         html.H6("AE 2025", className="text-muted"),
-                        html.H4(f"{total_ae_2025/1e9:.2f} Mds FCFA"),
-                        html.Small(f"+{(total_ae_2025-total_ae_2024)/1e9:.2f} Mds", className="text-info"),
+                        html.H4(f"{total_ae_2025:.2f} Mds FCFA"),
+                        html.Small(f"+{(total_ae_2025-total_ae_2024):.2f} Mds", className="text-info"),
                     ])
                 ], className="kpi-card shadow-sm")
             ], md=3),
@@ -858,8 +858,8 @@ def create_budget_page():
                 dbc.Card([
                     dbc.CardBody([
                         html.H6("CP 2025", className="text-muted"),
-                        html.H4(f"{total_cp_2025/1e9:.2f} Mds FCFA"),
-                        html.Small(f"+{(total_cp_2025-total_cp_2024)/1e9:.2f} Mds", className="text-info"),
+                        html.H4(f"{total_cp_2025:.2f} Mds FCFA"),
+                        html.Small(f"+{(total_cp_2025-total_cp_2024):.2f} Mds", className="text-info"),
                     ])
                 ], className="kpi-card shadow-sm")
             ], md=3),
