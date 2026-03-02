@@ -2,11 +2,6 @@
 Dashboard Dash - Audit Sémantique Loi de Finances Cameroun
 Dashboard interactif avec visualisations avancées (nuages de mots, topics, clusters, budget)
 """
-import sys
-from pathlib import Path
-
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "src"))
 
 import os
 import dash
@@ -39,6 +34,16 @@ from audit_semantique.config import (
     REPORTS_DIR,
     UMAP_PARAMS,
 )
+
+try:
+    from audit_semantique.dashboard.stats_page import (
+        create_stats_page as _create_stats_page_advanced,
+        register_stats_callbacks,
+    )
+
+    _ADVANCED_STATS = True
+except Exception:
+    _ADVANCED_STATS = False
 
 # Cache léger pour éviter de régénérer les nuages de mots à chaque interaction
 _BAROMETER_WC_CACHE: dict[tuple[str, str], str] = {}
@@ -1375,6 +1380,8 @@ def display_page(pathname):
     elif pathname == '/barometer':
         return create_barometer_page()
     elif pathname == '/stats':
+        if _ADVANCED_STATS:
+            return _create_stats_page_advanced(DATA)
         return create_stats_page()
     else:
         return create_home_page()
@@ -1397,7 +1404,7 @@ def toggle_theme(is_dark: bool | None):
 def update_mannwhitney_topic_density(topic_id: int | None):
     """Affiche la densité des probabilités d'un topic (2024 vs 2025) sous forme de courbes."""
     dist_2024 = DATA.get("topic_dists_2024")
-    dist_2025 = DATA.get("topic_distse _2025")
+    dist_2025 = DATA.get("topic_dists_2025")
     mw_df = DATA.get("mannwhitney")
 
     fig = go.Figure()
@@ -3148,8 +3155,17 @@ def create_stats_distributions():
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# LANCEMENT DE L'APPLICATION
+# LANCEMENT DE L'APPLICATION (DÉLÉGUÉ À scripts/run_dash.py)
 # ══════════════════════════════════════════════════════════════════════════════
 
-if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=8050)
+# IMPORTANT : ne pas lancer directement ce module avec ``python app_dash.py``.
+# Utiliser exclusivement ``python scripts/run_dash.py`` qui :
+#   - prépare correctement le PYTHONPATH (src/ et racine du projet),
+#   - charge les données via ``app_dash.load_all_data()`` puis enregistre
+#     éventuellement les callbacks avancés (stats_page).
+
+
+if __name__ == "__main__":  # pragma: no cover
+    from scripts.run_dash import main
+
+    main()
