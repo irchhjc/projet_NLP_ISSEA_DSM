@@ -70,6 +70,33 @@ def _cohens_d(x: np.ndarray, y: np.ndarray) -> float:
     return float(mean_diff / pooled_std) if pooled_std > 0 else float("nan")
 
 
+def _gini(x: np.ndarray | pd.Series) -> float:
+    """Coefficient de Gini sur une distribution (valeurs non négatives)."""
+    arr = np.asarray(x, dtype=float)
+    arr = arr[np.isfinite(arr) & (arr >= 0)]
+    if arr.size == 0:
+        return float("nan")
+    if np.all(arr == 0):
+        return 0.0
+    arr_sorted = np.sort(arr)
+    n = arr_sorted.size
+    cum = np.cumsum(arr_sorted)
+    return float((2.0 * np.sum((np.arange(1, n + 1) * arr_sorted)) / (n * cum[-1]) - (n + 1) / n))
+
+
+def _lorenz_curve(x: np.ndarray | pd.Series) -> tuple[np.ndarray, np.ndarray]:
+    """Retourne (x_lorenz, y_lorenz) pour la courbe de Lorenz normalisée."""
+    arr = np.asarray(x, dtype=float)
+    arr = arr[np.isfinite(arr) & (arr >= 0)]
+    if arr.size == 0:
+        return np.array([0.0, 1.0]), np.array([0.0, 1.0])
+    s = np.sort(arr)
+    cum = np.cumsum(s) / s.sum()
+    y = np.concatenate([[0.0], cum])
+    x_l = np.linspace(0.0, 1.0, len(y))
+    return x_l, y
+
+
 def _cluster_metrics(X, labels, sample_size: int = 2000, random_state: int = 42) -> dict:
     """Calcule des métriques de clustering de façon robuste et rapide (sampling)."""
     from sklearn.metrics import (
@@ -906,6 +933,15 @@ def create_budget_page():
 
         html.H3("Évolution 2024 → 2025 par Pilier", className="mb-3"),
         dcc.Graph(id='budget-evolution-chart'),
+
+        html.Hr(),
+
+        html.H3("Concentration budgétaire (Lorenz, top‑N, Pareto)", className="mb-3"),
+        dbc.Row([
+            dbc.Col(dcc.Graph(id='budget-lorenz-ae'), md=6),
+            dbc.Col(dcc.Graph(id='budget-topN-ae'), md=6),
+        ], className="mb-4"),
+        dcc.Graph(id='budget-pareto-2025'),
     ], className="page-container page-budget")
 
 
@@ -1393,6 +1429,153 @@ def display_page(pathname):
         return create_stats_page()
     else:
         return create_home_page()
+
+
+@app.callback(
+    [
+        Output('budget-lorenz-ae', 'figure'),
+        Output('budget-topN-ae', 'figure'),
+        Output('budget-pareto-2025', 'figure'),
+    ],
+    Input('url', 'pathname'),
+)
+def update_budget_concentration(pathname: str):
+    """Graphiques de concentration budgétaire (vue Budget)."""
+    budget_2024 = DATA.get('budget_2024')
+    budget_2025 = DATA.get('budget_2025')
+    if not isinstance(budget_2024, pd.DataFrame) or budget_2024.empty or \
+       not isinstance(budget_2025, pd.DataFrame) or budget_2025.empty:
+        empty_fig = go.Figure().update_layout(
+            template=pio.templates.default,
+            title="Données budgétaires non disponibles",
+        )
+        return empty_fig, empty_fig, empty_fig
+
+    # 1) Courbe de Lorenz sur les AE
+    fig_lorenz = go.Figure()
+    for year, df, color in [
+        ("2024", budget_2024, "#3b82f6"),
+        ("2025", budget_2025, "#ef4444"),
+    ]:
+        if 'ae' not in df.columns:
+            continue
+        x_l, y_l = _lorenz_curve(df['ae'].values)
+        g = _gini(df['ae'].values)
+        fig_lorenz.add_trace(
+            go.Scatter(
+                x=x_l,
+                y=y_l,
+                mode="lines",
+                line=dict(color=color, width=2.5),
+                name=f"{year} (Gini={g:.3f})",
+            )
+        )
+    fig_lorenz.add_trace(
+        go.Scatter(
+            x=[0, 1],
+            y=[0, 1],
+            mode="lines",
+            line=dict(color="gray", dash="dash"),
+            name="Égalité parfaite",
+        )
+    )
+    fig_lorenz.update_layout(
+        title="Courbes de Lorenz — AE",
+        xaxis_title="Fraction cumulée des lignes",
+        yaxis_title="Fraction cumulée des AE",
+        template=pio.templates.default,
+    )
+
+    # 2) Courbe de concentration top‑N programmes
+    fig_topN = go.Figure()
+    pcts = [5, 10, 20, 30, 50]
+    for year, df, color in [
+        ("2024", budget_2024, "#3b82f6"),
+        ("2025", budget_2025, "#ef4444"),
+    ]:
+        if 'ae' not in df.columns:
+            continue
+        s = np.sort(df['ae'].values)[::-1]
+        totals = s.sum()
+        if totals <= 0:
+            continue
+        top_vals = []
+        for p in pcts:
+            k = max(1, int(len(s) * p / 100.0))
+            top_vals.append(float(s[:k].sum() / totals * 100.0))
+        fig_topN.add_trace(
+            go.Scatter(
+                x=pcts,
+                y=top_vals,
+                mode="lines+markers",
+                marker=dict(size=7),
+                line=dict(width=2.5),
+                name=str(year),
+                line_color=color,
+            )
+        )
+    fig_topN.update_layout(
+        title="Courbe de concentration (top‑N programmes)",
+        xaxis_title="% des lignes (AE décroissant)",
+        yaxis_title="% des AE cumulées",
+        template=pio.templates.default,
+    )
+
+    # 3) Pareto AE 2025
+    fig_pareto = go.Figure()
+    if 'ae' in budget_2025.columns:
+        b25_sorted = budget_2025.sort_values('ae', ascending=False).reset_index(drop=True)
+        total_ae = float(b25_sorted['ae'].sum()) if not b25_sorted.empty else 0.0
+        if total_ae > 0:
+            indiv_pct = b25_sorted['ae'] / total_ae * 100.0
+            pct_cum = indiv_pct.cumsum()
+            rang = np.arange(1, len(b25_sorted) + 1)
+            fig_pareto.add_bar(
+                x=rang,
+                y=indiv_pct,
+                marker_color="#3b82f6",
+                opacity=0.75,
+                name="% AE individuel",
+            )
+            fig_pareto.add_trace(
+                go.Scatter(
+                    x=rang,
+                    y=pct_cum,
+                    mode="lines",
+                    line=dict(color="crimson", width=2.5),
+                    name="% AE cumulées",
+                    yaxis="y2",
+                )
+            )
+            # Ligne 80 %
+            try:
+                idx80 = int(np.argmax(pct_cum >= 80.0) + 1)
+                fig_pareto.add_vline(
+                    x=idx80,
+                    line_color="crimson",
+                    line_width=1.5,
+                    line_dash="dot",
+                )
+            except Exception:
+                idx80 = None
+            fig_pareto.update_layout(
+                title="Diagramme de Pareto AE 2025",
+                xaxis_title="Rang des programmes (AE décroissant)",
+                yaxis=dict(title="% AE individuel"),
+                yaxis2=dict(
+                    title="% AE cumulées",
+                    overlaying="y",
+                    side="right",
+                ),
+                template=pio.templates.default,
+            )
+    if not fig_pareto.data:
+        fig_pareto.update_layout(
+            title="Diagramme de Pareto AE 2025 (données indisponibles)",
+            template=pio.templates.default,
+        )
+
+    return fig_lorenz, fig_topN, fig_pareto
 
 
 @app.callback(
